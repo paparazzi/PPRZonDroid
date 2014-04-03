@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="fill_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#dddddd">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="WpName"
+            android:id="@+id/textViewWpName"
+            android:layout_gravity="center_horizontal"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp" />
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-10"
+            android:id="@+id/buttonmint"
+            android:layout_column="1"
+            android:layout_toLeftOf="@+id/editTextAltitude"
+            android:layout_alignBottom="@+id/editTextAltitude"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="false" />
+
+        <EditText
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:ems="10"
+            android:id="@+id/editTextAltitude"
+            android:layout_column="2"
+            android:layout_alignParentEnd="false"
+            android:layout_alignParentStart="false"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/textViewWpName"
+            android:layout_marginTop="5dp" />
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:text="+10"
+            android:id="@+id/buttonplust"
+            android:layout_column="3"
+            android:layout_gravity="right"
+            android:layout_alignBottom="@+id/editTextAltitude"
+            android:layout_alignParentEnd="true"
+            android:layout_toRightOf="@+id/editTextAltitude" />
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Confirm Changes"
+            android:id="@+id/buttonConfirm"
+            android:layout_below="@+id/textViewLon"
+            android:layout_alignParentEnd="false"
+            android:layout_alignParentStart="false"
+            android:layout_alignLeft="@+id/buttonmint"
+            android:layout_alignRight="@+id/buttonplust" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Latitude:"
+            android:id="@+id/textViewLat"
+            android:layout_below="@+id/editTextAltitude"
+            android:layout_marginTop="10dp"
+            android:layout_alignLeft="@+id/buttonmint"
+            android:layout_marginLeft="5dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Longitude:"
+            android:id="@+id/textViewLon"
+            android:layout_below="@+id/textViewLat"
+            android:layout_marginTop="10dp"
+            android:layout_alignLeft="@+id/textViewLat"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="my latitude"
+            android:id="@+id/textViewLatitude"
+            android:layout_marginLeft="20dp"
+            android:layout_alignBaseline="@+id/textViewLat"
+            android:layout_toRightOf="@+id/textViewLat"
+            android:textStyle="italic" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="my longitude"
+            android:id="@+id/textViewLongitude"
+            android:layout_alignBaseline="@+id/textViewLon"
+            android:layout_alignLeft="@+id/textViewLatitude"
+            android:textStyle="italic" />
+    </RelativeLayout>
+
+</LinearLayout>

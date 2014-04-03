@@ -1,0 +1,26 @@
+<resources>
+        <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <string name="pref_header_general">General</string>
+    <string name="pref_header_socket">Connection Settings</string>
+
+    <string name="pref_use_device_gps_title">Use My Location</string>
+    <string name="pref_use_device_gps_title_description">Shows your location on map using device GPS.</string>
+
+    <string name="pref_connect_server_onstartup_title">Connect Server on Start-up</string>
+    <string name="pref_connect_server_onstartup_description">Auto connects server when app launches.</string>
+
+    <string name="pref_header_con_settings">Connection Settings</string>
+
+    <string name="pref_ip_address_title">Server Ip Address</string>
+    <string name="pref_ip_address_default">10.31.6.31</string>
+
+    <string name="pref_port_number_title">Server Port Number</string>
+    <string name="pref_port_number_default">5010</string>
+
+    <string name="pref_local_port_number_title">Local Port Number</string>
+    <string name="pref_local_port_number_default">5005</string>
+
+</resources>

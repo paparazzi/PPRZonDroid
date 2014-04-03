@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content">
+
+    <ImageView
+        android:layout_width="240dp"
+        android:layout_height="140dp"
+        android:id="@+id/imageView_Pfd"
+        android:layout_gravity="center_horizontal|left|top"
+
+        android:background="@drawable/pdf_initial"
+        android:layout_marginTop="0dp"
+        android:adjustViewBounds="true" />
+
+    <ImageButton
+        android:layout_width="75dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageLaunch"
+        android:src="@drawable/launch"
+        android:layout_below="@+id/imageView_Pfd"
+        android:onClick="launch_ac" />
+
+    <ImageButton
+        android:layout_width="75dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageResurrect"
+        android:layout_alignBottom="@+id/imageLaunch"
+        android:src="@drawable/resurrect"
+        android:layout_alignRight="@+id/imageView_Pfd"
+        android:onClick="resurrect_ac" />
+
+    <ImageButton
+        android:layout_width="75dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageKill"
+        android:layout_alignBottom="@+id/imageLaunch"
+        android:src="@drawable/kill"
+        android:layout_toRightOf="@+id/imageLaunch"
+        android:layout_toLeftOf="@+id/imageResurrect"
+        android:onClick="kill_ac" />
+
+    <!-- title -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#DADADC"
+        android:layout_alignParentStart="false"
+        android:layout_marginBottom="1dp"
+        android:layout_below="@+id/imageKill"></View>
+    <TextView
+        android:id="@+id/header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:textSize="18dp"
+        android:layout_marginLeft="3dp"
+        android:layout_marginBottom="1dp"
+        android:textStyle="bold"
+        android:text="Blocks"
+        android:layout_alignParentTop="false"
+        android:layout_marginTop="8dp"
+        android:layout_below="@+id/imageLaunch" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageView"
+        android:src="@drawable/blocks"
+        android:layout_alignBottom="@+id/header"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="5dp" />
+
+    <!--  divider -->
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="1dp"
+        android:background="#DADADC"
+        android:layout_alignParentStart="false"
+        android:layout_below="@+id/header"></View>
+
+</RelativeLayout>

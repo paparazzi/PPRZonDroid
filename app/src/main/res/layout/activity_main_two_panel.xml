@@ -1,0 +1,328 @@
+<android.support.v4.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <!-- The main content view -->
+
+
+
+    <FrameLayout
+        android:id="@+id/content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+
+        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/map"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:name="com.google.android.gms.maps.MapFragment"
+                android:layout_weight="2" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:background="#1b1b1b"
+            android:paddingTop="3dp"
+            android:layout_gravity="top"
+            android:paddingRight="5dp">
+
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView"
+                android:src="@drawable/throttle"
+                android:layout_marginLeft="3dp" />
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="20px" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:id="@+id/ThrottleText"
+                android:layout_gravity="right|top"
+                android:textColor="#fff8f9"
+                android:textStyle="bold"
+                android:textSize="14dp" />
+            <View
+                android:layout_width="1dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="3dp"
+                android:layout_alignParentBottom="true"
+                android:background="#DADADC"
+                android:layout_marginTop="0dp"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"></View>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView12"
+                android:src="@drawable/speed" />
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="20px" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:id="@+id/SpeedText"
+                android:layout_gravity="right|top"
+                android:textColor="#fff8f9"
+                android:textStyle="bold"
+                android:textSize="14dp" />
+
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="3dp"
+                android:layout_alignParentBottom="true"
+                android:background="#DADADC"
+                android:layout_marginTop="0dp"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"></View>
+
+
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView11"
+                android:src="@drawable/altitude" />
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="20px" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A m"
+                android:id="@+id/Alt_On_Map"
+                android:layout_gravity="right|top"
+                android:textColor="#fff8f9"
+                android:textStyle="bold"
+                android:textSize="14dp" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="3dp"
+                android:layout_alignParentBottom="true"
+                android:background="#DADADC"
+                android:layout_marginTop="0dp"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"></View>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView10"
+                android:src="@drawable/gps" />
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="20px" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:id="@+id/Gps_Status_On_Map"
+                android:layout_gravity="right|top"
+                android:textColor="#fff8f9"
+                android:textStyle="bold"
+                android:textSize="14dp" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="3dp"
+                android:layout_alignParentBottom="true"
+                android:background="#DADADC"
+                android:layout_marginTop="0dp"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"></View>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView9"
+                android:src="@drawable/battery" />
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="20px" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A v"
+                android:id="@+id/Bat_Vol_On_Map"
+                android:layout_gravity="right|top"
+                android:textColor="#fff8f9"
+                android:textStyle="bold"
+                android:textSize="14dp" />
+
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="3dp"
+                android:layout_alignParentBottom="true"
+                android:background="#DADADC"
+                android:layout_marginTop="0dp"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"></View>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView2"
+                android:src="@drawable/debug" />
+
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="20px"
+                android:id="@+id/space" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:id="@+id/State_Filter_On_Map"
+                android:layout_gravity="right|top"
+                android:textColor="#fff8f9"
+                android:textStyle="bold"
+                android:textSize="14dp" />
+            <View
+                android:layout_width="1dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="3dp"
+                android:layout_alignParentBottom="true"
+                android:background="#DADADC"
+                android:layout_marginTop="0dp"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"></View>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView3"
+                android:src="@drawable/fl_time"
+                android:layout_marginLeft="3dp" />
+
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="20px" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A s"
+                android:id="@+id/Flight_Time_On_Map"
+                android:layout_gravity="right|top"
+                android:textColor="#fff8f9"
+                android:textStyle="bold"
+                android:textSize="14dp" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="3dp"
+                android:layout_alignParentBottom="true"
+                android:background="#DADADC"
+                android:layout_marginTop="0dp"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"></View>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView4"
+                android:src="@drawable/mode"
+                android:layout_marginLeft="3dp" />
+
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="20px"
+                android:id="@+id/space3" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:id="@+id/Ap_Status_On_Map"
+                android:layout_gravity="right|top"
+                android:textColor="#fff8f9"
+                android:textStyle="bold"
+                android:textSize="14dp" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="fill_parent"
+                android:layout_marginBottom="3dp"
+                android:layout_alignParentBottom="true"
+                android:background="#DADADC"
+                android:layout_marginTop="0dp"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp"></View>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView8"
+                />
+
+            <Space
+                android:layout_width="5dp"
+                android:layout_height="20px"
+                android:id="@+id/space2" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="N/A"
+                android:id="@+id/AirSpeed_On_Map"
+                android:layout_gravity="right|top"
+                android:textColor="#fff8f9"
+                android:textStyle="bold"
+                android:textSize="14dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="240dp"
+                android:layout_height="fill_parent"
+                android:layout_gravity="right|top"
+                android:layout_weight="0">
+
+                <fragment android:name="com.PPRZonDroid.Right_Menu_Class"
+                    android:id="@+id/right_fragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="right|top" />
+
+            </LinearLayout>
+
+    </FrameLayout>
+
+
+
+
+    <!-- The navigation drawer -->
+    <fragment android:name="com.PPRZonDroid.Left_Menu_Class"
+        android:id="@+id/left_fragment"
+        android:layout_width="@dimen/left_menu_width"
+        android:layout_height="match_parent"
+        android:layout_gravity="left"/>
+
+
+
+
+
+
+</android.support.v4.widget.DrawerLayout>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <!-- opens a subscreen of settings -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--<Float android:key="map_zoom_level">17.0f</Float> -->
+    <!-- General Settings -->
+
+    <PreferenceCategory
+        android:title="@string/pref_header_general"
+        android:key="pref_key_general_settings">
+
+    <CheckBoxPreference
+        android:key="use_gps_checkbox"
+        android:title="@string/pref_use_device_gps_title"
+        android:summary="@string/pref_use_device_gps_title_description"
+        android:defaultValue="false" />
+
+    <CheckBoxPreference
+            android:key="connect_server_on_startup"
+            android:title="@string/pref_connect_server_onstartup_title"
+            android:summary="@string/pref_connect_server_onstartup_description"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <!-- Communication Settings -->
+    <PreferenceCategory
+        android:title="@string/pref_header_socket"
+        android:key="pref_header_socket">
+            <EditTextPreference
+                android:key="server_ip_adress_text"
+                android:title="@string/pref_ip_address_title"
+                android:summary="Ip adress of pc that server is running at"
+                android:defaultValue="@string/pref_ip_address_default"
+                android:selectAllOnFocus="true"
+                android:singleLine="true"
+                android:maxLines="1"
+                />
+
+            <EditTextPreference
+                android:key="server_port_number_text"
+                android:title="Server TCP port"
+                android:summary="Server TCP listening port"
+                android:defaultValue="@string/pref_port_number_default"
+                android:selectAllOnFocus="true"
+                android:inputType="numberDecimal"
+                android:singleLine="true"
+                android:maxLines="1" />
+
+            <EditTextPreference
+                android:key="local_port_number_text"
+                android:title="UDP Listen Port"
+                android:summary="App UDP listen port"
+                android:defaultValue="@string/pref_local_port_number_default"
+                android:selectAllOnFocus="true"
+                android:inputType="numberDecimal"
+                android:singleLine="true"
+                android:maxLines="1" />
+
+        <EditTextPreference
+            android:key="app_password"
+            android:title="Password to control Aircrafts"
+            android:summary="Password to control aircraft"
+            android:defaultValue=""
+            android:selectAllOnFocus="true"
+            android:inputType="numberDecimal"
+            android:singleLine="true"
+            android:maxLines="1" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Notification Settings"
+        android:key="pref_header_socket">
+
+        <EditTextPreference
+            android:key="minimum_air_speed"
+            android:title="AirSpeed Warning at"
+            android:defaultValue="@string/pref_default_airspeed"
+            android:selectAllOnFocus="true"
+            android:inputType="numberDecimal"
+            android:singleLine="true"
+            android:maxLines="1" />
+
+    </PreferenceCategory>
+
+
+</PreferenceScreen>
