@@ -20,6 +20,11 @@ android {
         minSdkVersion 13
         targetSdkVersion 16
     }
+    signingConfigs {
+        debug {
+            storeFile file ('key/debug.keystore')
+        }
+    }
 }
 
 dependencies {

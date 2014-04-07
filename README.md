@@ -1,13 +1,36 @@
 PPRZonDroid
 ===========
 
-This is a GCS application for Android device to to used as an extension of the normal GCS.
+PPRZonDroid is an Android application for controlling [Paparazzi UAS] (http://paparazziuav.org).
 
-This version is for beta-testing, source code will be released soon.
+The user documentation can be found at http://http://wiki.paparazziuav.org/wiki/PPRZonDroid
 
 
-How to install and run
-----------------------
+Released version
+----------------
+
+Currently, only the beta version 0.4 is released and can be downloaded from http://download.paparazziuav.org/android)
+
+
+How to open in android studio
+-----------------------------
+
+* Clone the source on your local computer with [Android Studio] (http://developer.android.com/sdk/installing/studio.html) installed.
+* Open Android Studio and choose "import project", then select your project folder.
+* Synchronize your project with Gradle files.
+* Run the application, if your android device is connected in debug mode, the newly compiled program can be directly uploaded.
+
+
+Google Map API
+--------------
+
+Using Google Map API requires a key (in app/src/AndroidManifest.xml file) and a keystore file (in app/key/debug.keystore).
+You can use the set of keys for debugging purpose but not for releasing the application.
+You can also use your own keys by changing the relevant files (app/build.gradle holds the path to the local keystore file, remove the line in order to use your default key (usually in ~/.android folder)
+
+
+How to install and run from Paparazzi
+-------------------------------------
 
 The GCS should run at least the server agent (and link/simulator to get data from aircraft) and App Server application from the tool menu
 
@@ -16,5 +39,5 @@ Copy the apk file to your android device and select it in your file browser to i
 Run the newly installed application.
 Set the network settings (IP of server, TCP/UDP ports, password), your aircraft should appear soon (left panel shows the list of aircraft, select one to center the aircraft).
 
-In case of trouble, kill the android app and start again and/or restart the groud agent in verbose mode (option -v)
+In case of trouble, kill the android app and start again and/or restart the ground agent in verbose mode (option -v)
 
