@@ -1,5 +1,15 @@
+\#*
+*~
+.#*
+\#*\#
+*.swp
+
+*.class
+
+*.iml
 .gradle
-/local.properties
-/.idea/workspace.xml
+local.properties
+.idea
 .DS_Store
 .directory
+
