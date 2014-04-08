@@ -76,6 +76,8 @@ import java.util.ArrayList;
 
 public class MainActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+ //IMPORTANT FLAG MUST BE 'FALSE' FOR SIGNED APK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  boolean DEBUG=true;
 
   //Application Settings
   public static final String SERVER_IP_ADDRESS = "server_ip_adress_text";
@@ -1234,7 +1236,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
           MapAlt.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude + "m");
           AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude_Changed = false;
           Drawable d = new BitmapDrawable(getResources(), AC_DATA.AcPfd);
-          Pfd.setBackground(d);
+          //Pfd.setBackground(d); ->requires min sdk 16
+            Pfd.setImageDrawable(d);
           //Refresh_Pfd()
         }
 

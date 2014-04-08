@@ -35,8 +35,9 @@
         android:layout_marginTop="8dp"
         android:background="#dddddd"
         android:gravity="center"
-        android:textColor="#FFFFFF"
+        android:textColor="#00079f"
         android:textSize="12sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:text="n\a" />
 
 </RelativeLayout>
