@@ -281,10 +281,12 @@ public class Telemetry extends Application {
         String BufAirspeed= ParsedData[15].substring(0, ParsedData[15].indexOf(".") + 1);
 
         if ( !BufAirspeed.equals(AircraftData[AcIndex].AirSpeed) && (Double.parseDouble(BufAirspeed))>=0 ) {
-              AircraftData[AcIndex].AirSpeed= ParsedData[15].substring(0, ParsedData[15].indexOf(".") + 1);
-              AircraftData[AcIndex].AirspeedEnabled = true;
-              AircraftData[AcIndex].AirspeedChanged = true;
-          }
+          AircraftData[AcIndex].AirSpeed= ParsedData[15].substring(0, ParsedData[15].indexOf(".") + 1);
+          AircraftData[AcIndex].AirspeedEnabled = true;
+          AircraftData[AcIndex].AirspeedChanged = true;
+          if (DEBUG) Log.d("PPRZ_info", "Airspeed Enabled.");
+
+        }
         //Add position to queue (for map lines)
         AircraftData[AcIndex].AC_Path.add(AircraftData[AcIndex].Position);
 

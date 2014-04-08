@@ -297,7 +297,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     TextViewStateFilterMode = (TextView) findViewById(R.id.State_Filter_On_Map);
     TextViewSpeed = (TextView) findViewById(R.id.SpeedText);
     TextViewAirspeed = (TextView) findViewById(R.id.AirSpeed_On_Map);
-
+    TextViewAirspeed.setVisibility(View.INVISIBLE);
 
   }
 
@@ -838,9 +838,27 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
     // Commit the edits!
     editor.commit();
-
+      send_to_server("removeme",false);
 
   }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        //Force to reconnect
+        TcpSettingsChanged = true;
+
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+
+
+    }
 
   @Override
   protected void onStart() {
@@ -850,6 +868,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     MapZoomLevel = AppSettings.getFloat("MapZoomLevel", 16.0f);
 
   }
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
