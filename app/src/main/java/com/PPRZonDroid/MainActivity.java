@@ -73,6 +73,9 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static java.lang.Double.*;
+import static java.lang.Double.parseDouble;
+
 
 public class MainActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -124,7 +127,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   private TextView MapAlt;
   private TextView MapThrottle;
   private ImageView Pfd;
-  private ToggleButton Button_ConnectToServer;
+  private Button Button_ConnectToServer;
   private ToggleButton ChangeVisibleAcButon;
   private Switch LockToAcSwitch;
   private DrawerLayout mDrawerLayout;
@@ -160,7 +163,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     AC_DATA.ServerIp = AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_default_server_ip));
     AC_DATA.ServerTcpPort = Integer.parseInt(AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_default_server_port)));
     AC_DATA.UdpListenPort = Integer.parseInt(AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_default_local_port)));
-    AC_DATA.AirSpeedMinSetting = Double.parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
+    AC_DATA.AirSpeedMinSetting = parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
+    AC_DATA.DEBUG=DEBUG;
 
     AC_DATA.prepare_class();
     AC_DATA.GraphicsScaleFactor = getResources().getDisplayMetrics().density;
@@ -179,9 +183,9 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     AppSettings = PreferenceManager.getDefaultSharedPreferences(this);
     AppSettings.registerOnSharedPreferenceChangeListener(this);
 
-    AppPassword = new String(AppSettings.getString("app_password", ""));
+    AppPassword = (AppSettings.getString("app_password", ""));
 
-    //Setup waypoint dialog
+    /* Setup waypoint dialog */
     WpDialog = new Dialog(this);
     WpDialog.setContentView(R.layout.wp_modified);
     DialogTextWpName = (TextView) WpDialog.findViewById(R.id.textViewWpName);
@@ -195,7 +199,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     DialogAltDown.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Double alt = Double.parseDouble(DialogWpAltitude.getText().toString()) - 10;
+        Double alt = parseDouble(DialogWpAltitude.getText().toString()) - 10;
         DialogWpAltitude.setText(alt.toString());
       }
     });
@@ -203,7 +207,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     DialogAltUp.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Double alt = Double.parseDouble(DialogWpAltitude.getText().toString()) + 10;
+        Double alt = parseDouble(DialogWpAltitude.getText().toString()) + 10;
         DialogWpAltitude.setText(alt.toString());
       }
     });
@@ -240,7 +244,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (position >= 1) {
           view.setSelected(true);
-          set_selected_ac(position - 1);
+          set_selected_ac(position - 1,true);
           mDrawerLayout.closeDrawers();
         }
 
@@ -260,7 +264,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (position >= 1) {
           view.setSelected(true);
-          set_selected_block(position - 1);
+          set_selected_block(position - 1,false);
           mDrawerLayout.closeDrawers();
         }
       }
@@ -277,7 +281,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     MapThrottle = (TextView) findViewById(R.id.ThrottleText);
     Pfd = (ImageView) findViewById(R.id.imageView_Pfd);
 
-    Button_ConnectToServer = (ToggleButton) findViewById(R.id.toggleButton_ConnectToServer);
+    Button_ConnectToServer = (Button) findViewById(R.id.Button_ConnectToServer);
     setup_map_ifneeded();
 
 
@@ -302,13 +306,18 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
    *
    * @param BlocId
    */
-  private void set_selected_block(int BlocId) {
+  private void set_selected_block(int BlocId,boolean ReqFromServer) {
 
-    AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock = BlocId;
-    mBlListAdapter.SelectedInd = BlocId + 1;
-    mBlListAdapter.notifyDataSetChanged();
-    //Notify server
-    send_to_server("PPRZonDroid JUMP_TO_BLOCK " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Id + " " + BlocId, true);
+    //AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock = BlocId;
+
+    if (ReqFromServer){
+        mBlListAdapter.SelectedInd = BlocId + 1;
+        mBlListAdapter.notifyDataSetChanged();
+    }
+    else {
+        //Notify server
+        send_to_server("PPRZonDroid JUMP_TO_BLOCK " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Id + " " + BlocId, true);
+    }
 
   }
 
@@ -316,8 +325,9 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
    * Set Selected airplane
    *
    * @param AcInd
+   * @param centerAC : want to center AC?
    */
-  private void set_selected_ac(int AcInd) {
+  private void set_selected_ac(int AcInd,boolean centerAC) {
 
     AC_DATA.SelAcInd = AcInd;
     //Set Title;
@@ -329,6 +339,16 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     refresh_block_list();
     set_marker_visibility();
 
+    //set airspeed visibility
+    if (AC_DATA.AircraftData[AC_DATA.SelAcInd].AirspeedEnabled) {
+        TextViewAirspeed.setVisibility(View.VISIBLE);
+        TextViewAirspeed.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].AirSpeed + " m/s");
+    }
+      else
+    {
+        TextViewAirspeed.setVisibility(View.INVISIBLE);
+    }
+
     for (int i = 0; i <= AC_DATA.IndexEnd; i++) {
       //Is AC ready to show on ui?
       //Check if ac i visible and its position is changed
@@ -338,7 +358,11 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(AC_DATA.AircraftData[i].AC_Logo);
         AC_DATA.AircraftData[i].AC_Marker.setIcon(bitmapDescriptor);
         //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(AC_DATA.AircraftData[AC_DATA.SelAcInd].Position, MapZoomLevel), 1500, null);
-        center_aircraft();
+          if (centerAC)
+          {
+              center_aircraft();
+          }
+
       }
 
     }
@@ -457,7 +481,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         continue; //we dont have data for this wp yet
 
       if (AC_DATA.AircraftData[AcInd].AC_Marker.getId().equals(WpID)) {
-        set_selected_ac(AcInd);
+        set_selected_ac(AcInd,true);
         Toast.makeText(getApplicationContext(), "Selected A/C =  " + AC_DATA.AircraftData[AcInd].AC_Name, Toast.LENGTH_SHORT).show();
         return true;
 
@@ -535,12 +559,11 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       }
     }
 
-    AC_DATA.BatteryChanged = false;
-    AC_DATA.NewAcAdded = false;
     //mAcListAdapter.SelectedInd=AC_DATA.SelAcInd;
 
-    set_selected_ac(AC_DATA.SelAcInd);
-
+    set_selected_ac(AC_DATA.SelAcInd,false);
+      AC_DATA.BatteryChanged = false;
+      AC_DATA.NewAcAdded = false;
   }
 
   private void refresh_map_lines(int AcInd) {
@@ -548,7 +571,6 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     if (AC_DATA.AircraftData[AcInd].Ac_PolLine != null) {
       AC_DATA.AircraftData[AcInd].Ac_PolLine.remove();
     }
-
 
     PolylineOptions rectOptions = new PolylineOptions()
             .addAll(AC_DATA.AircraftData[AcInd].AC_Path)
@@ -877,7 +899,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
     if (key.equals(MIN_AIRSPEED)) {
 
-      AC_DATA.AirSpeedMinSetting = Double.parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
+      AC_DATA.AirSpeedMinSetting = parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
       //Log.d("PPRZ_info", "Local Listen Port changed to: " + AppSettings.getString(MIN_AIRSPEED, "10"));
     }
 
@@ -935,14 +957,15 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   }
 
   //Function called when button_CenterAC (in left fragment) is pressed
-  public void center_ac(View Gorunus) {
+  //REMOVED
+  /*public void center_ac(View Gorunus) {
     if (AC_DATA.SelAcInd >= 0) {
       center_aircraft();
       mDrawerLayout.closeDrawers();
       return;
     }
     Toast.makeText(getApplicationContext(), "No AC data yet!", Toast.LENGTH_SHORT).show();
-  }
+  }*/
 
   //Function called when toggleButton_ConnectToServer (in left fragment) is pressed
   public void connect_to_server(View Gorunus) {
@@ -1125,7 +1148,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     @Override
     protected String doInBackground(String... strings) {
 
-      String TcpReceived = null;
+      String TcpReceived;
 
       while (isTaskRunning) {
 
@@ -1211,9 +1234,12 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
         if (AC_DATA.BlockChanged) {
           //Block changed for selected aircraft
-          //Log.d("PPRZ_info", "Block Changed for selected AC.");
-          mBlListAdapter.SelectedInd = AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock;
-          mBlListAdapter.notifyDataSetChanged();
+            if (DEBUG) Log.d("PPRZ_info", "Block Changed for selected AC.");
+
+          set_selected_block((AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock-1),true);
+
+          //mBlListAdapter.SelectedInd = AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock;
+          //mBlListAdapter.notifyDataSetChanged();
           AC_DATA.BlockChanged = false;
         }
 
@@ -1241,11 +1267,13 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
           //Refresh_Pfd()
         }
 
-        if (AC_DATA.AirspeedChanged) {
+
+        if (AC_DATA.AircraftData[AC_DATA.SelAcInd].AirspeedEnabled && AC_DATA.AircraftData[AC_DATA.SelAcInd].AirspeedChanged) {
           //Airspeed Enabled
           TextViewAirspeed.setVisibility(View.VISIBLE);
           TextViewAirspeed.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].AirSpeed + " m/s");
         }
+
         //No error handling right now.
         Button_ConnectToServer.setText("Connected!");
         //}

@@ -23,6 +23,7 @@
 package com.PPRZonDroid;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,14 +60,13 @@ public class BlockListAdapter extends ArrayAdapter<BlockModel> {
 
     //if(!BlockModelArrayList.get(position).isGroupHeader()){
     rowView = inflater.inflate(R.layout.acblock, parent, false);
-
-    //rowView.setBackground(R.drawable.ac_bckg_selector);
-    if (position == SelectedInd) {
-      rowView.setBackgroundColor(R.color.red);
-    }
-    // 3. Get icon,ac_name & ac_battery views from the rowView
+    // 3. Get icon,bl names rowView
     TextView titleView = (TextView) rowView.findViewById(R.id.bl_name);
-
+    //Highlight selected block
+    if (position == SelectedInd) {
+      rowView.setBackgroundColor(Color.parseColor("#479cd5"));
+        titleView.setTextColor(Color.WHITE);
+    }
 
     // 4. Set the text for textView
     titleView.setText(BlockModelArrayList.get(position).getTitle());

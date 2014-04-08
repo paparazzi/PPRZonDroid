@@ -4,15 +4,16 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ToggleButton
+
+    <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Connect to server"
-        android:id="@+id/toggleButton_ConnectToServer"
-        android:textOn="Connecting.."
+        android:text="Re-Connect to Server"
+        android:id="@+id/Button_ConnectToServer"
+        android:layout_gravity="center_horizontal"
         android:textColor="#000000"
-        android:textOff="Connect to Server"
         android:onClick="connect_to_server"
+        android:hint='"this is hint"'
         android:textSize="14dp"
         android:textStyle="normal" />
 
@@ -32,16 +33,6 @@
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"></LinearLayout>
-
-    <Button
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="Center A/C >"
-        android:id="@+id/button_CenterAC"
-        android:textColor="#000000"
-        android:onClick="center_ac"
-        android:textSize="14dp"
-        android:textStyle="normal" />
 
     <Switch
         android:layout_width="fill_parent"

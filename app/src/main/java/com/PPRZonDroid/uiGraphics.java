@@ -37,11 +37,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 
-/**
- * Created by pprz on 1/28/14.
- */
-
-
 public class uiGraphics {
 
 
