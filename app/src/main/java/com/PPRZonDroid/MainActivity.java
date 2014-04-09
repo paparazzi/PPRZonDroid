@@ -34,20 +34,26 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -127,6 +133,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   private TextView MapAlt;
   private TextView MapThrottle;
   private ImageView Pfd;
+  private ImageView mToolTip;
   private Button Button_ConnectToServer;
   private ToggleButton ChangeVisibleAcButon;
   private Switch LockToAcSwitch;
@@ -141,6 +148,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   //Background task to read and write telemery msgs
   private boolean isTaskRunning;
+
+
 
   private ArrayList<Model> generateDataAc() {
     AcList = new ArrayList<Model>();
@@ -262,13 +271,103 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     BlListView.setAdapter(mBlListAdapter);
     BlListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
       public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (position >= 1) {
+        /*if (position >= 1) {
           view.setSelected(true);
           set_selected_block(position - 1,false);
           mDrawerLayout.closeDrawers();
-        }
+        }*/
+        //if (DEBUG)Log.d("PPRZ_info", ">>>>>>>Clicked <<<<<<< " );
+          //ClickedBlockId=position-1;
       }
     });
+
+
+      BlListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+          @Override
+          public boolean onItemLongClick(AdapterView<?> parent, View view,
+                                         int arg2, long arg3) {
+
+              //Toast.makeText(getApplicationContext(), ("Long pressed to arg2:" +arg2 + " arg3:"+ arg3) , Toast.LENGTH_SHORT).show();
+             /* if (arg2 >= 1) {
+                  view.setSelected(true);
+                  set_selected_block(arg2 - 1, false);
+                  mDrawerLayout.closeDrawers();
+
+              }*/
+              ClickedBlockId=arg2-1;
+              Log.d("TouchTest", "from long click id:" + ClickedBlockId);
+              return false;
+          }
+
+
+      });
+
+      BlListView.setOnTouchListener(new AdapterView.OnTouchListener() {
+
+
+         private Long StarTime;
+         private boolean FingerDown;
+         private Long PressTimeOut= new Long("5000000000");
+          private Long Tox = new Long("1000000000");
+
+          @Override
+          public boolean onTouch(View view, MotionEvent event) {
+
+              //float x = event.getX();
+              //float y = event.getY();
+
+              int x1= (int) event.getX();
+              float y1= event.getY();
+
+              //Log.d("TouchTest", "ELLLLEEEE>>>>>> x:"+x+" y:"+y);
+             /* if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                  Log.d("TouchTest", "Touch down");
+              }
+              else if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                  Log.d("TouchTest", "Touch up");
+              }*/
+              /*Context context = getApplicationContext();
+              CharSequence text = "Hello toast!";
+              int duration = Toast.LENGTH_SHORT;
+              Toast toast = Toast.makeText(context, text, duration);
+              if (FingerDown) {
+
+                  //TextView TO = (TextView) view.findViewById(R.id.bl_name);
+                  int Atime = (int) (((System.nanoTime() - StarTime)/Tox));
+                  //TO.setText(Atime);
+                  //Toast.makeText(view.getContext(), "Hold for "+Atime, Toast.LENGTH_SHORT).show();
+                  toast.setGravity(Gravity.TOP| Gravity.LEFT, x1, y1);
+                  toast.show();
+              }*/
+
+              if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                  StarTime = System.nanoTime();
+                  FingerDown=true;
+                  //Log.d("TouchTest", "Parmak assaaada nanotime:" + StarTime);
+
+                  mToolTip.setImageBitmap(AC_DATA.muiGraphics.create_block_tooltip(PressTimeOut,System.nanoTime(),AC_DATA.GraphicsScaleFactor));
+                  mToolTip.setVisibility(View.VISIBLE);
+                  mToolTip.setTranslationY(y1);
+                  Log.d("TouchTest", "ELLLLEEEE>>>>>> x:"+x1+" y:"+y1);
+              }
+              if (event.getAction() == MotionEvent.ACTION_UP) {
+                  //Log.d("TouchTest", "Parmak yukarida" + ClickedBlockId);
+                  Log.d("TouchTest", "Parmak yukarida nanotime" + System.nanoTime());
+                  if ( (System.nanoTime()-StarTime) >= PressTimeOut) {
+                      set_selected_block(ClickedBlockId, false);
+                      mDrawerLayout.closeDrawers();
+
+                  }
+                  FingerDown=false;
+                  mToolTip.setVisibility(View.INVISIBLE);
+
+              }
+
+              return false;
+          }
+
+      });
 
 
     //Set map zoom level variable (if any);
@@ -280,6 +379,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     MapAlt = (TextView) findViewById(R.id.Alt_On_Map);
     MapThrottle = (TextView) findViewById(R.id.ThrottleText);
     Pfd = (ImageView) findViewById(R.id.imageView_Pfd);
+    mToolTip = (ImageView) findViewById(R.id.imageFeedBack );
 
     Button_ConnectToServer = (Button) findViewById(R.id.Button_ConnectToServer);
     setup_map_ifneeded();
@@ -299,9 +399,28 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     TextViewAirspeed = (TextView) findViewById(R.id.AirSpeed_On_Map);
     TextViewAirspeed.setVisibility(View.INVISIBLE);
 
+
+
+
   }
 
-  /**
+    int ClickedBlockId;
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        // MotionEvent object holds X-Y values
+        if(event.getAction() == MotionEvent.ACTION_DOWN) {
+            String text = "You click at x = " + event.getX() + " and y = " + event.getY();
+            Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+            if (DEBUG)Log.d("PPRZ_info", text );
+        }
+
+        return super.onTouchEvent(event);
+    }
+
+
+
+    /**
    * Set Selected Block
    *
    * @param BlocId
@@ -317,6 +436,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     else {
         //Notify server
         send_to_server("PPRZonDroid JUMP_TO_BLOCK " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Id + " " + BlocId, true);
+
     }
 
   }
@@ -333,8 +453,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     //Set Title;
     setTitle(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Name);
 
-    mAcListAdapter.SelectedInd = AcInd;
-    mAcListAdapter.notifyDataSetChanged();
+
 
     refresh_block_list();
     set_marker_visibility();
@@ -366,6 +485,9 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       }
 
     }
+      mAcListAdapter.SelectedInd = AcInd;
+      mAcListAdapter.notifyDataSetChanged();
+      refresh_ac_list();
 
   }
 
@@ -561,9 +683,6 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
     //mAcListAdapter.SelectedInd=AC_DATA.SelAcInd;
 
-    set_selected_ac(AC_DATA.SelAcInd,false);
-      AC_DATA.BatteryChanged = false;
-      AC_DATA.NewAcAdded = false;
   }
 
   private void refresh_map_lines(int AcInd) {
@@ -674,7 +793,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
             if ((AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpPosition == null) || (AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarker != null))
               continue; //we dont have data for this wp yet
-            //Log.d("PPRZ_info", "New marker added for Ac id: " + AcInd + " wpind:" + MarkerInd);
+
+            if (DEBUG)Log.d("PPRZ_info", "New marker added for Ac id: " + AcInd + " wpind:" + MarkerInd);
             AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarker = mMap.addMarker(new MarkerOptions()
                     .position(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpPosition)
                     .title(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpName)
@@ -869,6 +989,25 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // The following call pauses the rendering thread.
+        // If your OpenGL application is memory intensive,
+        // you should consider de-allocating objects that
+        // consume significant memory here.
+       // mGLView.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // The following call resumes a paused rendering thread.
+        // If you de-allocated graphic objects for onPause()
+        // this is a good place to re-allocate them.
+        //mGLView.onResume();
+    }
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -957,7 +1096,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   public void clear_ac_track(View Gorunus) {
 
     if (AC_DATA.SelAcInd < 0) {
-      center_aircraft();
+      //center_aircraft();
       Toast.makeText(getApplicationContext(), "No AC data yet!", Toast.LENGTH_SHORT).show();
 
       return;
@@ -1066,6 +1205,12 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   }
 
   public void change_visible_acdata(View mView) {
+
+    //Return if no AC data
+    if (AC_DATA.SelAcInd < 0) {
+      Toast.makeText(getApplicationContext(), "No AC data yet!", Toast.LENGTH_SHORT).show();
+      return;
+    }
 
     if (ChangeVisibleAcButon.isChecked()) {
       Toast.makeText(getApplicationContext(), "Showing only " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Name + " markers", Toast.LENGTH_SHORT).show();
@@ -1265,7 +1410,11 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
         if (AC_DATA.NewAcAdded || AC_DATA.BatteryChanged) {
           //new ac addedBattery value for an ac is changed
-          refresh_ac_list();
+          //refresh_ac_list();
+
+            set_selected_ac(AC_DATA.SelAcInd,false);
+            AC_DATA.BatteryChanged = false;
+            AC_DATA.NewAcAdded = false;
         }
 
         //For a smooth gui we need refresh only changed gui controls

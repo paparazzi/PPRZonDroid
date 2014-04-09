@@ -8,6 +8,7 @@
         android:minSdkVersion="13"
         android:targetSdkVersion="16" />
 
+
     <application
         android:name="com.PPRZonDroid.Telemetry"
         android:allowBackup="true"

@@ -308,6 +308,21 @@
 
             </LinearLayout>
 
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_gravity="right"
+            android:layout_marginRight="240dp">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageFeedBack"
+                android:src="@drawable/ic_plusone_tall_off_client"
+                android:visibility="invisible" />
+        </LinearLayout>
+
     </FrameLayout>
 
 

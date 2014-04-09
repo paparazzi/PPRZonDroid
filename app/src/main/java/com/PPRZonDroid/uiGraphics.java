@@ -192,6 +192,79 @@ public class uiGraphics {
     return CanvIn;
   }
 
+    public Bitmap create_block_tooltip(Long Duration,  Long TimePassed, float SizeFactor) {
+
+        //validate color string
+
+
+            int w = (int) (80 * SizeFactor);
+            int h = (int) (30 * SizeFactor);
+            Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
+            Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
+            Canvas canvas = new Canvas(bmp);
+
+             //Create flyingwing logo
+        Paint p = new Paint();
+
+        p.setColor(Color.WHITE);
+
+
+        p.setStyle(Paint.Style.FILL);
+            //p.setStrokeWidth(2f);
+        p.setAntiAlias(true);
+
+        RectF r = new RectF(0,0,(w-w/6),h);
+
+        //Create tooltip box
+        Path ToolTippath = new Path();
+        ToolTippath.addRoundRect(r,(3*SizeFactor),(3*SizeFactor),Path.Direction.CW);
+        canvas.drawPath(ToolTippath, p);
+
+        //Create bound line
+        Paint line = new Paint();
+        line.setColor(Color.WHITE);
+        line.setStyle(Paint.Style.STROKE);
+        line.setStrokeWidth(6f);
+        line.setAntiAlias(true);
+
+        ToolTippath.moveTo((w-w/6), (h / 2));
+        ToolTippath.lineTo((w), (h/2));
+        canvas.drawPath(ToolTippath, line);
+
+        Paint TP = new Paint();
+
+        TP.setColor(Color.GREEN);
+
+
+        TP.setStyle(Paint.Style.FILL);
+        //p.setStrokeWidth(2f);
+        TP.setAntiAlias(true);
+
+        float increment = (float) ((TimePassed*(w-w/6))/Duration);
+        RectF rTP = new RectF(0,0,increment,h);
+
+        ToolTippath.addRoundRect(rTP,(3*SizeFactor),(3*SizeFactor),Path.Direction.CW);
+        canvas.drawPath(ToolTippath, TP);
+
+
+
+
+/*
+
+            Paint black = new Paint();
+            black.setColor(Color.BLACK);
+            black.setStyle(Paint.Style.STROKE);
+            black.setStrokeWidth(6f);
+            black.setAntiAlias(true);
+
+            canvas.drawPath(ToolTippath, black);
+            p.setStrokeWidth(3.5f);
+            canvas.drawPath(ToolTippath, p);*/
+            return bmp;
+
+
+    }
+
   /**
    * Method create AC Logo
    *
