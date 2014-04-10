@@ -191,14 +191,16 @@ public class uiGraphics {
     CanvIn.drawPath(SelPath, p);
     return CanvIn;
   }
-
-    public Bitmap create_block_tooltip(Long Duration,  Long TimePassed, float SizeFactor) {
+    private Bitmap bit_buf;
+    public Bitmap create_block_tooltip(Long PressTO,  Long TimePassed, float SizeFactor) {
 
         //validate color string
+        int w = (int) (80 * SizeFactor);
+        int h = (int) (30 * SizeFactor);
+        float increment = (float) ((TimePassed*(5*w/6))/PressTO);
+        if (increment>(5*w/6)) return bit_buf ;
 
 
-            int w = (int) (80 * SizeFactor);
-            int h = (int) (30 * SizeFactor);
             Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
             Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
             Canvas canvas = new Canvas(bmp);
@@ -217,8 +219,8 @@ public class uiGraphics {
 
         //Create tooltip box
         Path ToolTippath = new Path();
-        ToolTippath.addRoundRect(r,(3*SizeFactor),(3*SizeFactor),Path.Direction.CW);
-        canvas.drawPath(ToolTippath, p);
+        //ToolTippath.addRoundRect(r,(3*SizeFactor),(3*SizeFactor),Path.Direction.CW);
+        canvas.drawRoundRect(r,(5*SizeFactor),(5*SizeFactor), p);
 
         //Create bound line
         Paint line = new Paint();
@@ -231,6 +233,7 @@ public class uiGraphics {
         ToolTippath.lineTo((w), (h/2));
         canvas.drawPath(ToolTippath, line);
 
+        //create
         Paint TP = new Paint();
 
         TP.setColor(Color.GREEN);
@@ -240,11 +243,10 @@ public class uiGraphics {
         //p.setStrokeWidth(2f);
         TP.setAntiAlias(true);
 
-        float increment = (float) ((TimePassed*(w-w/6))/Duration);
         RectF rTP = new RectF(0,0,increment,h);
 
-        ToolTippath.addRoundRect(rTP,(3*SizeFactor),(3*SizeFactor),Path.Direction.CW);
-        canvas.drawPath(ToolTippath, TP);
+        //ToolTippath.addRoundRect(rTP,(3*SizeFactor),(3*SizeFactor),Path.Direction.CW);
+        canvas.drawRoundRect(rTP,(5*SizeFactor),(5*SizeFactor), TP);
 
 
 
@@ -260,6 +262,7 @@ public class uiGraphics {
             canvas.drawPath(ToolTippath, black);
             p.setStrokeWidth(3.5f);
             canvas.drawPath(ToolTippath, p);*/
+        bit_buf=bmp;
             return bmp;
 
 

@@ -28,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -37,6 +38,9 @@ public class BlockListAdapter extends ArrayAdapter<BlockModel> {
   private final Context context;
   private final ArrayList<BlockModel> BlockModelArrayList;
   public int SelectedInd = -1;
+  public int ClickedInd = -1;
+  public ProgressBar BlProgress;
+  public int BlColor;
 
   public BlockListAdapter(Context context, ArrayList<BlockModel> BlockModelArrayList) {
 
@@ -50,34 +54,47 @@ public class BlockListAdapter extends ArrayAdapter<BlockModel> {
 
   @Override
   public View getView(int position, View convertView, ViewGroup parent) {
+
     // 1. Create inflater
     LayoutInflater inflater = (LayoutInflater) context
             .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
     // 2. Get rowView from inflater
-    //this.setSelector(R.drawable.ac_bckg_selector);
     View rowView = null;
-
-    //if(!BlockModelArrayList.get(position).isGroupHeader()){
     rowView = inflater.inflate(R.layout.acblock, parent, false);
     // 3. Get icon,bl names rowView
+
     TextView titleView = (TextView) rowView.findViewById(R.id.bl_name);
     //Highlight selected block
     if (position == SelectedInd) {
       rowView.setBackgroundColor(Color.parseColor("#479cd5"));
         titleView.setTextColor(Color.WHITE);
+
     }
 
-    // 4. Set the text for textView
+    // 4. Set the textView for block name
     titleView.setText(BlockModelArrayList.get(position).getTitle());
-    //}
-    //else{
-    //rowView = inflater.inflate(R.layout.group_header_item, parent, false);
-    //TextView titleView = (TextView) rowView.findViewById(R.id.header);
-    //titleView.setText(BlockModelArrayList.get(position).getTitle());
-    //}
 
-    // 5. retrn rowView
+    // 5. Set block color
+    View BlColorBar = (View)  rowView.findViewById(R.id.bl_color);
+    BlColorBar.setBackgroundColor(BlColor);
+
+    // 5. If item is clicked show clicked item template
+      if (position == ClickedInd) {
+          //Inflate bl_clicked template
+          rowView = inflater.inflate(R.layout.bl_clicked, parent, false);
+          //Set the titleView_bl for block name
+          TextView titleView_bl = (TextView) rowView.findViewById(R.id.bl_name_clicked);
+          titleView_bl.setText(BlockModelArrayList.get(position).getTitle());
+
+          //Set progressbar value
+          BlProgress = (ProgressBar) rowView.findViewById(R.id.BLC_Progress);
+          //BlProgress.setProgress(SetProgress);
+
+      }
+
+    // 6. return rowView
+
     return rowView;
   }
 }

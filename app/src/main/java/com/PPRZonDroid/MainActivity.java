@@ -44,10 +44,12 @@ import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -58,7 +60,9 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -95,6 +99,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   public static final String MIN_AIRSPEED = "minimum_air_speed";
   public static final String USE_GPS = "use_gps_checkbox";
   public static final String Control_Pass = "app_password";
+  public static final String BLOCK_C_TIMEOUT = "block_change_timeout";
+
   public Telemetry AC_DATA;                       //Class to hold&proces AC Telemetry Data
   boolean AcLocked = false;
   TextView DialogTextWpName;
@@ -133,7 +139,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   private TextView MapAlt;
   private TextView MapThrottle;
   private ImageView Pfd;
-  private ImageView mToolTip;
+
   private Button Button_ConnectToServer;
   private ToggleButton ChangeVisibleAcButon;
   private Switch LockToAcSwitch;
@@ -149,7 +155,10 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   //Background task to read and write telemery msgs
   private boolean isTaskRunning;
 
-
+  private CountDownTimer BL_CountDown;
+  private int BL_CountDownTimerValue;
+  private int JumpToBlock;
+  private int BL_CountDownTimerDuration;
 
   private ArrayList<Model> generateDataAc() {
     AcList = new ArrayList<Model>();
@@ -169,9 +178,9 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     //Create Telemetry class
     AC_DATA = (Telemetry) getApplication();
     //Read & setup Telemetry class
-    AC_DATA.ServerIp = AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_default_server_ip));
-    AC_DATA.ServerTcpPort = Integer.parseInt(AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_default_server_port)));
-    AC_DATA.UdpListenPort = Integer.parseInt(AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_default_local_port)));
+    AC_DATA.ServerIp = AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_ip_address_default));
+    AC_DATA.ServerTcpPort = Integer.parseInt(AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_port_number_default)));
+    AC_DATA.UdpListenPort = Integer.parseInt(AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_local_port_number_default)));
     AC_DATA.AirSpeedMinSetting = parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
     AC_DATA.DEBUG=DEBUG;
 
@@ -193,6 +202,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     AppSettings.registerOnSharedPreferenceChangeListener(this);
 
     AppPassword = (AppSettings.getString("app_password", ""));
+
 
     /* Setup waypoint dialog */
     WpDialog = new Dialog(this);
@@ -235,139 +245,14 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     //Setup left drawer
     mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
+
     //Setup AC List
-    mAcListAdapter = new AcListAdapter(this, generateDataAc());
-
-    // if extending Activity 2. Get ListView from activity_main.xml
-    AcListView = (ListView) findViewById(R.id.AcList);
-    View AppControls = getLayoutInflater().inflate(R.layout.appcontrols, null);
-
-    //First item will be app controls
-    //This workaround applied to for app controls sliding to top if user slides them.
-    AcListView.addHeaderView(AppControls);
-
-    // 3. setListAdapter
-    AcListView.setAdapter(mAcListAdapter);
-    //Create onclick listener
-    AcListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (position >= 1) {
-          view.setSelected(true);
-          set_selected_ac(position - 1,true);
-          mDrawerLayout.closeDrawers();
-        }
-
-      }
-    });
+    setup_ac_list();
 
 
-    //Block Listview
-    mBlListAdapter = new BlockListAdapter(this, generateDataBl());
+    //Setup Block list
+    setup_block_list();
 
-    //
-    BlListView = (ListView) findViewById(R.id.BlocksList);
-    View FlightControls = getLayoutInflater().inflate(R.layout.flight_controls, null);
-    BlListView.addHeaderView(FlightControls);
-    BlListView.setAdapter(mBlListAdapter);
-    BlListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        /*if (position >= 1) {
-          view.setSelected(true);
-          set_selected_block(position - 1,false);
-          mDrawerLayout.closeDrawers();
-        }*/
-        //if (DEBUG)Log.d("PPRZ_info", ">>>>>>>Clicked <<<<<<< " );
-          //ClickedBlockId=position-1;
-      }
-    });
-
-
-      BlListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-
-          @Override
-          public boolean onItemLongClick(AdapterView<?> parent, View view,
-                                         int arg2, long arg3) {
-
-              //Toast.makeText(getApplicationContext(), ("Long pressed to arg2:" +arg2 + " arg3:"+ arg3) , Toast.LENGTH_SHORT).show();
-             /* if (arg2 >= 1) {
-                  view.setSelected(true);
-                  set_selected_block(arg2 - 1, false);
-                  mDrawerLayout.closeDrawers();
-
-              }*/
-              ClickedBlockId=arg2-1;
-              Log.d("TouchTest", "from long click id:" + ClickedBlockId);
-              return false;
-          }
-
-
-      });
-
-      BlListView.setOnTouchListener(new AdapterView.OnTouchListener() {
-
-
-         private Long StarTime;
-         private boolean FingerDown;
-         private Long PressTimeOut= new Long("5000000000");
-          private Long Tox = new Long("1000000000");
-
-          @Override
-          public boolean onTouch(View view, MotionEvent event) {
-
-              //float x = event.getX();
-              //float y = event.getY();
-
-              int x1= (int) event.getX();
-              float y1= event.getY();
-
-              //Log.d("TouchTest", "ELLLLEEEE>>>>>> x:"+x+" y:"+y);
-             /* if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
-                  Log.d("TouchTest", "Touch down");
-              }
-              else if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
-                  Log.d("TouchTest", "Touch up");
-              }*/
-              /*Context context = getApplicationContext();
-              CharSequence text = "Hello toast!";
-              int duration = Toast.LENGTH_SHORT;
-              Toast toast = Toast.makeText(context, text, duration);
-              if (FingerDown) {
-
-                  //TextView TO = (TextView) view.findViewById(R.id.bl_name);
-                  int Atime = (int) (((System.nanoTime() - StarTime)/Tox));
-                  //TO.setText(Atime);
-                  //Toast.makeText(view.getContext(), "Hold for "+Atime, Toast.LENGTH_SHORT).show();
-                  toast.setGravity(Gravity.TOP| Gravity.LEFT, x1, y1);
-                  toast.show();
-              }*/
-
-              if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                  StarTime = System.nanoTime();
-                  FingerDown=true;
-                  //Log.d("TouchTest", "Parmak assaaada nanotime:" + StarTime);
-
-                  mToolTip.setImageBitmap(AC_DATA.muiGraphics.create_block_tooltip(PressTimeOut,System.nanoTime(),AC_DATA.GraphicsScaleFactor));
-                  mToolTip.setVisibility(View.VISIBLE);
-                  mToolTip.setTranslationY(y1);
-                  Log.d("TouchTest", "ELLLLEEEE>>>>>> x:"+x1+" y:"+y1);
-              }
-              if (event.getAction() == MotionEvent.ACTION_UP) {
-                  //Log.d("TouchTest", "Parmak yukarida" + ClickedBlockId);
-                  Log.d("TouchTest", "Parmak yukarida nanotime" + System.nanoTime());
-                  if ( (System.nanoTime()-StarTime) >= PressTimeOut) {
-                      set_selected_block(ClickedBlockId, false);
-                      mDrawerLayout.closeDrawers();
-
-                  }
-                  FingerDown=false;
-                  mToolTip.setVisibility(View.INVISIBLE);
-
-              }
-
-              return false;
-          }
-
-      });
 
 
     //Set map zoom level variable (if any);
@@ -379,7 +264,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     MapAlt = (TextView) findViewById(R.id.Alt_On_Map);
     MapThrottle = (TextView) findViewById(R.id.ThrottleText);
     Pfd = (ImageView) findViewById(R.id.imageView_Pfd);
-    mToolTip = (ImageView) findViewById(R.id.imageFeedBack );
+    //mToolTip = (ImageView) findViewById(R.id.imageFeedBack );
 
     Button_ConnectToServer = (Button) findViewById(R.id.Button_ConnectToServer);
     setup_map_ifneeded();
@@ -399,25 +284,103 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     TextViewAirspeed = (TextView) findViewById(R.id.AirSpeed_On_Map);
     TextViewAirspeed.setVisibility(View.INVISIBLE);
 
+  }
+
+  private  void setup_block_list() {
+
+      //Block Listview
+      setup_counter();
+
+      mBlListAdapter = new BlockListAdapter(this, generateDataBl());
+
+      //
+      BlListView = (ListView) findViewById(R.id.BlocksList);
+      View FlightControls = getLayoutInflater().inflate(R.layout.flight_controls, null);
+      BlListView.addHeaderView(FlightControls);
+      BlListView.setAdapter(mBlListAdapter);
+      BlListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+          public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+              BL_CountDown.cancel();
+              BL_CountDownTimerValue=0;
+              mBlListAdapter.ClickedInd = position-1;
+              JumpToBlock= position-1;
+              mBlListAdapter.notifyDataSetChanged();
+              BL_CountDown.start();
+
+              //TextView myDEbt = (TextView) view.findViewById(R.id.bl_name_clicked);
+              //myDEbt.setText("huloo");
+              //ClickedView = new View(getApplicationContext());
+
+          }
+      });
 
 
 
   }
 
+  private void setup_counter() {
+      //Get timeout from appsettings
+      BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString("block_change_timeout", "4000"));
+
+      //Setup timer for progressbar of clicked block
+      BL_CountDown = new CountDownTimer(BL_CountDownTimerDuration, ((int)BL_CountDownTimerDuration/100))  {
+          @Override
+          public void onTick(long l) {
+
+              if (BL_CountDownTimerDuration>0) {
+                  mBlListAdapter.BlProgress.setProgress(BL_CountDownTimerValue);
+                  BL_CountDownTimerValue++;
+              }
+          }
+
+          @Override
+          public void onFinish() {
+              if (BL_CountDownTimerDuration>0) {
+                  BL_CountDownTimerValue = 0;
+                  mBlListAdapter.BlProgress.setProgress(BL_CountDownTimerValue);
+                  mBlListAdapter.ClickedInd = -1;
+                  set_selected_block(JumpToBlock, false);
+                  mBlListAdapter.notifyDataSetChanged();
+              }
+          }
+
+      };
+  }
+
+  private void setup_ac_list() {
+      mAcListAdapter = new AcListAdapter(this, generateDataAc());
+
+      // if extending Activity 2. Get ListView from activity_main.xml
+      AcListView = (ListView) findViewById(R.id.AcList);
+      View AppControls = getLayoutInflater().inflate(R.layout.appcontrols, null);
+
+      //First item will be app controls
+      //This workaround applied to for app controls sliding to top if user slides them.
+      AcListView.addHeaderView(AppControls);
+
+      // 3. setListAdapter
+      AcListView.setAdapter(mAcListAdapter);
+      //Create onclick listener
+      AcListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+          if (position >= 1) {
+           BL_CountDown.cancel();
+           BL_CountDownTimerValue=0;
+           mBlListAdapter.ClickedInd=-1;
+           mBlListAdapter.notifyDataSetChanged();
+
+           view.setSelected(true);
+           set_selected_ac(position - 1,true);
+           mDrawerLayout.closeDrawers();
+           }
+
+            }
+        });
+
+  }
+
     int ClickedBlockId;
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        // MotionEvent object holds X-Y values
-        if(event.getAction() == MotionEvent.ACTION_DOWN) {
-            String text = "You click at x = " + event.getX() + " and y = " + event.getY();
-            Toast.makeText(this, text, Toast.LENGTH_LONG).show();
-            if (DEBUG)Log.d("PPRZ_info", text );
-        }
-
-        return super.onTouchEvent(event);
-    }
-
 
 
     /**
@@ -485,6 +448,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       }
 
     }
+
       mAcListAdapter.SelectedInd = AcInd;
       mAcListAdapter.notifyDataSetChanged();
       refresh_ac_list();
@@ -502,7 +466,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     for (i = 0; i < AC_DATA.AircraftData[AC_DATA.SelAcInd].BlockCount; i++) {
       BlList.add(new BlockModel(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Blocks[i].BlName));
     }
-
+    mBlListAdapter.BlColor = AC_DATA.muiGraphics.get_color(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Color);
     mBlListAdapter.SelectedInd = AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock;
     mBlListAdapter.notifyDataSetChanged();
   }
@@ -1034,42 +998,50 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     //Changed settings will be applied on nex iteration of async task
 
     if (key.equals(SERVER_IP_ADDRESS)) {
-      AC_DATA.ServerIp = AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_default_server_ip));
-      //Log.d("PPRZ_info", "IP changed to: " + AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_default_server_ip)));
+      AC_DATA.ServerIp = AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_ip_address_default));
+      if (DEBUG) Log.d("PPRZ_info", "IP changed to: " + AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_ip_address_default)));
       TcpSettingsChanged = true;
 
     }
 
     if (key.equals(SERVER_PORT_ADDRESS)) {
-      AC_DATA.ServerTcpPort = Integer.parseInt(AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_default_server_port)));
+      AC_DATA.ServerTcpPort = Integer.parseInt(AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_port_number_default)));
       TcpSettingsChanged = true;
-      //Log.d("PPRZ_info", "Server Port changed to: " + AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_default_server_port)));
+      if (DEBUG) Log.d("PPRZ_info", "Server Port changed to: " + AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_port_number_default)));
 
     }
 
     if (key.equals(LOCAL_PORT_ADDRESS)) {
 
-      AC_DATA.UdpListenPort = Integer.parseInt(AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_default_local_port)));
+      AC_DATA.UdpListenPort = Integer.parseInt(AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_local_port_number_default)));
       UdpSettingsChanged = true;
-      //Log.d("PPRZ_info", "Local Listen Port changed to: " + AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_default_local_port)));
+      if (DEBUG) Log.d("PPRZ_info", "Local Listen Port changed to: " + AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_local_port_number_default)));
 
     }
 
     if (key.equals(MIN_AIRSPEED)) {
 
       AC_DATA.AirSpeedMinSetting = parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
-      //Log.d("PPRZ_info", "Local Listen Port changed to: " + AppSettings.getString(MIN_AIRSPEED, "10"));
+      if (DEBUG) Log.d("PPRZ_info", "Local Listen Port changed to: " + AppSettings.getString(MIN_AIRSPEED, "10"));
     }
 
     if (key.equals(USE_GPS)) {
       mMap.setMyLocationEnabled(AppSettings.getBoolean(USE_GPS, true));
-      //Log.d("PPRZ_info", "GPS Usage changed to: " + AppSettings.getBoolean(USE_GPS, true));
+      if (DEBUG) Log.d("PPRZ_info", "GPS Usage changed to: " + AppSettings.getBoolean(USE_GPS, true));
     }
 
     if (key.equals(Control_Pass)) {
       AppPassword = AppSettings.getString(Control_Pass, "");
-      //Log.d("PPRZ_info", "App_password changed : " + AppSettings.getString(Control_Pass , ""));
+      if (DEBUG) Log.d("PPRZ_info", "App_password changed : " + AppSettings.getString(Control_Pass , ""));
     }
+
+      if (key.equals(BLOCK_C_TIMEOUT)) {
+          BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString(BLOCK_C_TIMEOUT, "4000"));
+          setup_counter();
+          if (DEBUG) Log.d("PPRZ_info", "Clock change timeout changed : " + AppSettings.getString(BLOCK_C_TIMEOUT , ""));
+      }
+
+
 
 
   }
@@ -1093,19 +1065,17 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   }
 
-  public void clear_ac_track(View Gorunus) {
+  public void clear_ac_track(View mView) {
 
     if (AC_DATA.SelAcInd < 0) {
-      //center_aircraft();
       Toast.makeText(getApplicationContext(), "No AC data yet!", Toast.LENGTH_SHORT).show();
-
       return;
     }
 
-
     if (ShowOnlySelected) {
       AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Path.clear();
-    } else {
+    }
+    else {
       for (int AcInd = 0; AcInd <= AC_DATA.IndexEnd; AcInd++) {
         AC_DATA.AircraftData[AcInd].AC_Path.clear();
       }
@@ -1114,21 +1084,31 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   }
 
-  //Function called when button_CenterAC (in left fragment) is pressed
-  //REMOVED
-  /*public void center_ac(View Gorunus) {
-    if (AC_DATA.SelAcInd >= 0) {
-      center_aircraft();
-      mDrawerLayout.closeDrawers();
-      return;
+    public void confirm_bl_change(View mView) {
+        //Cancel timer & clear BlockList
+        BL_CountDown.cancel();
+        BL_CountDownTimerValue=0;
+        mBlListAdapter.ClickedInd=-1;
+        mBlListAdapter.notifyDataSetChanged();
+        //Notify app_server for changes
+        set_selected_block(JumpToBlock,false);
+
     }
-    Toast.makeText(getApplicationContext(), "No AC data yet!", Toast.LENGTH_SHORT).show();
-  }*/
+
+    public void cancel_bl_change(View mView) {
+        //Cancel timer & clear BlockList
+        BL_CountDown.cancel();
+        BL_CountDownTimerValue=0;
+        mBlListAdapter.ClickedInd=-1;
+        mBlListAdapter.notifyDataSetChanged();
+
+
+    }
 
   //Function called when toggleButton_ConnectToServer (in left fragment) is pressed
-  public void connect_to_server(View Gorunus) {
+  public void connect_to_server(View mView) {
 
-    Toast.makeText(getApplicationContext(), "Trying to connectserver..", Toast.LENGTH_SHORT).show();
+    Toast.makeText(getApplicationContext(), "Trying to re-connect to server..", Toast.LENGTH_SHORT).show();
     //Force to reconnect
     TcpSettingsChanged = true;
     UdpSettingsChanged = true;
@@ -1306,7 +1286,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       super.onPreExecute();
 
       isTaskRunning = true;
-      //Log.d("PPRZ_info", "ReadTelemetry() function started.");
+      if (DEBUG) Log.d("PPRZ_info", "ReadTelemetry() function started.");
     }
 
     @Override
@@ -1346,7 +1326,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
       }
 
-      //Log.d("PPRZ_info", "doInBackground exiting");
+      if (DEBUG) Log.d("PPRZ_info", "doInBackground exiting");
       return null;
     }
 
@@ -1361,14 +1341,14 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
           AC_DATA.tcp_connection();
           AC_DATA.mTcpClient.setup_tcp();
           TcpSettingsChanged = false;
-          //Log.d("PPRZ_info", "TcpSettingsChanged applied");
+          if (DEBUG) Log.d("PPRZ_info", "TcpSettingsChanged applied");
         }
 
         if (UdpSettingsChanged) {
           AC_DATA.setup_udp();
           AC_DATA.tcp_connection();
           UdpSettingsChanged = false;
-          //Log.d("PPRZ_info", "UdpSettingsChanged applied");
+          if (DEBUG) Log.d("PPRZ_info", "UdpSettingsChanged applied");
         }
 
         if (AC_DATA.SelAcInd < 0) {
@@ -1447,7 +1427,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         //}
 
       } catch (Exception ex) {
-        Log.d("Pprz_info", "Exception occured: " + ex.toString());
+          if (DEBUG) Log.d("Pprz_info", "Exception occured: " + ex.toString());
 
       }
 
@@ -1456,7 +1436,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     @Override
     protected void onPostExecute(String s) {
       super.onPostExecute(s);
-      //Log.d("PPRZ_info", "onPostExecute");
+      if (DEBUG) Log.d("PPRZ_info", "onPostExecute");
     }
 
   }

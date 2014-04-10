@@ -13,10 +13,10 @@
     <string name="pref_app_settings_title">PPRZonDroid App Settings</string>
 
         <!--Default Server / Local Port Settings (UI) Strings -->
-    <string name="pref_default_server_ip">10.31.6.28</string>
-    <string name="pref_default_server_port">5010</string>
-    <string name="pref_default_local_port">5005</string>
-    <string name="pref_default_airspeed">10</string>
+
+
+
+
 
     <!--Default Server / Local Port Settings (UI) Strings -->
     <string name="max_num_of_ac">25</string>
