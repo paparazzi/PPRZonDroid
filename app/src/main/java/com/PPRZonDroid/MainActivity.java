@@ -34,36 +34,32 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Debug;
 import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.VelocityTracker;
 import android.view.View;
-import android.view.ViewConfiguration;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.LayoutAnimationController;
+import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -83,7 +79,6 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static java.lang.Double.*;
 import static java.lang.Double.parseDouble;
 
 
@@ -142,7 +137,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   private Button Button_ConnectToServer;
   private ToggleButton ChangeVisibleAcButon;
-  private Switch LockToAcSwitch;
+  private ToggleButton LockToAcSwitch;
   private DrawerLayout mDrawerLayout;
   //Dialog components
   private Dialog WpDialog;
@@ -176,7 +171,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   private void setup_telemetry_class() {
 
     //Create Telemetry class
-    AC_DATA = (Telemetry) getApplication();
+    AC_DATA = new Telemetry();
+
     //Read & setup Telemetry class
     AC_DATA.ServerIp = AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_ip_address_default));
     AC_DATA.ServerTcpPort = Integer.parseInt(AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_port_number_default)));
@@ -184,8 +180,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     AC_DATA.AirSpeedMinSetting = parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
     AC_DATA.DEBUG=DEBUG;
 
-    AC_DATA.prepare_class();
     AC_DATA.GraphicsScaleFactor = getResources().getDisplayMetrics().density;
+    AC_DATA.prepare_class();
 
     AC_DATA.tcp_connection();
     AC_DATA.mTcpClient.setup_tcp();
@@ -197,7 +193,12 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
    */
   private void set_up_app() {
 
-    //Get app settings
+
+
+    if ( Debug.isDebuggerConnected() ) DEBUG= true;
+    else DEBUG=false;
+
+      //Get app settings
     AppSettings = PreferenceManager.getDefaultSharedPreferences(this);
     AppSettings.registerOnSharedPreferenceChangeListener(this);
 
@@ -270,8 +271,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     setup_map_ifneeded();
 
 
-    LockToAcSwitch = (Switch) findViewById(R.id.switch_TraceAircraft);
-    LockToAcSwitch.setSelected(true);
+    LockToAcSwitch = (ToggleButton) findViewById(R.id.toggleButton_TraceAircraft);
+    //LockToAcSwitch.setSelected(true);
     ChangeVisibleAcButon = (ToggleButton) findViewById(R.id.toggleButtonVisibleAc);
     ChangeVisibleAcButon.setSelected(false);
 
@@ -305,8 +306,10 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
               BL_CountDownTimerValue=0;
               mBlListAdapter.ClickedInd = position-1;
               JumpToBlock= position-1;
-              mBlListAdapter.notifyDataSetChanged();
+
               BL_CountDown.start();
+              mBlListAdapter.notifyDataSetChanged();
+
 
               //TextView myDEbt = (TextView) view.findViewById(R.id.bl_name_clicked);
               //myDEbt.setText("huloo");
@@ -468,6 +471,25 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     }
     mBlListAdapter.BlColor = AC_DATA.muiGraphics.get_color(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Color);
     mBlListAdapter.SelectedInd = AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock;
+
+
+      AnimationSet set = new AnimationSet(true);
+
+      Animation animation = new AlphaAnimation(0.0f, 1.0f);
+
+      animation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, +1.0f,
+              Animation.RELATIVE_TO_SELF, 0.0f,
+              Animation.RELATIVE_TO_SELF, 0.0f,
+              Animation.RELATIVE_TO_SELF, 0.0f
+      );
+      animation.setDuration(250);
+      set.addAnimation(animation);
+
+      LayoutAnimationController controller =
+              new LayoutAnimationController(set, 0.25f);
+      BlListView.setLayoutAnimation(controller);
+
+
     mBlListAdapter.notifyDataSetChanged();
   }
 
@@ -651,17 +673,23 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   private void refresh_map_lines(int AcInd) {
 
-    if (AC_DATA.AircraftData[AcInd].Ac_PolLine != null) {
+    /*if (AC_DATA.AircraftData[AcInd].Ac_PolLine != null) {
       AC_DATA.AircraftData[AcInd].Ac_PolLine.remove();
-    }
+    }*/
+    // AC_DATA.AircraftData[AcInd].Ac_PolLine.remove();
+    //  if (AC_DATA.AircraftData[AcInd].Ac_PolLine_Options == null) {
+          PolylineOptions rectOptions = new PolylineOptions()
+                  .addAll(AC_DATA.AircraftData[AcInd].AC_Path)
+                  .width(1.5f * AC_DATA.GraphicsScaleFactor)
+                  .color(AC_DATA.muiGraphics.get_color(AC_DATA.AircraftData[AcInd].AC_Color))
+                  .geodesic(true);
+          AC_DATA.AircraftData[AcInd].Ac_PolLine = mMap.addPolyline(rectOptions);
+     // }
 
-    PolylineOptions rectOptions = new PolylineOptions()
-            .addAll(AC_DATA.AircraftData[AcInd].AC_Path)
-            .width(2 * AC_DATA.GraphicsScaleFactor)
-            .color(AC_DATA.muiGraphics.get_color(AC_DATA.AircraftData[AcInd].AC_Color))
-            .geodesic(true);
 
-    AC_DATA.AircraftData[AcInd].Ac_PolLine = mMap.addPolyline(rectOptions);
+      //AC_DATA.AircraftData[AcInd].Ac_PolLine.setPoints(AC_DATA.AircraftData[AcInd].AC_Path);
+
+
 
     if (AcInd == AC_DATA.SelAcInd || ShowOnlySelected == false) {
       AC_DATA.AircraftData[AcInd].Ac_PolLine.setVisible(true);
@@ -1408,11 +1436,15 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
         if (AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude_Changed) {
           MapAlt.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude + "m");
-          AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude_Changed = false;
-          Drawable d = new BitmapDrawable(getResources(), AC_DATA.AcPfd);
-          //Pfd.setBackground(d); ->requires min sdk 16
-            Pfd.setImageDrawable(d);
-          //Refresh_Pfd()
+
+            AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude_Changed = false;
+            //TODO correct pfd
+
+          //Drawable d = new BitmapDrawable(getResources(), );
+
+          //Pfd.setImageDrawable(d);
+            Pfd.setImageBitmap(AC_DATA.AcPfd);
+
         }
 
 

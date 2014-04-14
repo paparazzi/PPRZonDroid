@@ -36,9 +36,9 @@
                 android:id="@+id/imageView"
                 android:src="@drawable/throttle"
                 android:layout_marginLeft="3dp" />
-            <Space
+            <View
                 android:layout_width="5dp"
-                android:layout_height="20px" />
+                android:layout_height="fill_parent"></View>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -64,9 +64,9 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/imageView12"
                 android:src="@drawable/speed" />
-            <Space
+            <View
                 android:layout_width="5dp"
-                android:layout_height="20px" />
+                android:layout_height="fill_parent"></View>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -96,9 +96,10 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/imageView11"
                 android:src="@drawable/altitude" />
-            <Space
+            <View
                 android:layout_width="5dp"
-                android:layout_height="20px" />
+                android:layout_height="fill_parent"></View>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -124,9 +125,10 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/imageView10"
                 android:src="@drawable/gps" />
-            <Space
+            <View
                 android:layout_width="5dp"
-                android:layout_height="20px" />
+                android:layout_height="fill_parent"></View>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -152,9 +154,10 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/imageView9"
                 android:src="@drawable/battery" />
-            <Space
+            <View
                 android:layout_width="5dp"
-                android:layout_height="20px" />
+                android:layout_height="fill_parent"></View>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -182,10 +185,10 @@
                 android:id="@+id/imageView2"
                 android:src="@drawable/debug" />
 
-            <Space
+            <View
                 android:layout_width="5dp"
-                android:layout_height="20px"
-                android:id="@+id/space" />
+                android:layout_height="fill_parent"
+                android:id="@+id/space" ></View>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -213,9 +216,9 @@
                 android:src="@drawable/fl_time"
                 android:layout_marginLeft="3dp" />
 
-            <Space
+            <View
                 android:layout_width="5dp"
-                android:layout_height="20px" />
+                android:layout_height="fill_parent"></View>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -244,10 +247,11 @@
                 android:src="@drawable/mode"
                 android:layout_marginLeft="3dp" />
 
-            <Space
+            <View
                 android:layout_width="5dp"
-                android:layout_height="20px"
-                android:id="@+id/space3" />
+                android:layout_height="fill_parent"
+                android:id="@+id/space3"></View>
+
 
             <TextView
                 android:layout_width="wrap_content"
@@ -275,10 +279,10 @@
                 android:id="@+id/imageView8"
                 />
 
-            <Space
+            <View
                 android:layout_width="5dp"
-                android:layout_height="20px"
-                android:id="@+id/space2" />
+                android:layout_height="fill_parent"
+                android:id="@+id/space2" ></View>
 
             <TextView
                 android:layout_width="wrap_content"

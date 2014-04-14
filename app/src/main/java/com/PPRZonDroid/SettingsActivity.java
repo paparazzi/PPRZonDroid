@@ -112,6 +112,7 @@ class SettingsFragment extends PreferenceFragment implements SharedPreferences.O
     if (key.equals(BLOCK_C_TIMEOUT)) {
         Preference connectionPref = findPreference(key);
         //Set summary to be the user-description for the selected value
+        assert connectionPref != null;
         connectionPref.setSummary(sharedPreferences.getString(key, "") + " ms");
     }
 
@@ -121,8 +122,7 @@ class SettingsFragment extends PreferenceFragment implements SharedPreferences.O
   @Override
   public void onResume() {
     super.onResume();
-    getPreferenceScreen().getSharedPreferences()
-            .registerOnSharedPreferenceChangeListener(this);
+    getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
 
   }
 

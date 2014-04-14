@@ -27,6 +27,8 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -79,10 +81,16 @@ public class BlockListAdapter extends ArrayAdapter<BlockModel> {
     View BlColorBar = (View)  rowView.findViewById(R.id.bl_color);
     BlColorBar.setBackgroundColor(BlColor);
 
-    // 5. If item is clicked show clicked item template
+    // 6. If item is clicked show clicked item template
       if (position == ClickedInd) {
           //Inflate bl_clicked template
           rowView = inflater.inflate(R.layout.bl_clicked, parent, false);
+
+          //Set animation
+          Animation mAnim;
+          mAnim= AnimationUtils.loadAnimation(context,R.anim.bl_selected_anim);
+          rowView.startAnimation(mAnim);
+
           //Set the titleView_bl for block name
           TextView titleView_bl = (TextView) rowView.findViewById(R.id.bl_name_clicked);
           titleView_bl.setText(BlockModelArrayList.get(position).getTitle());
@@ -93,7 +101,7 @@ public class BlockListAdapter extends ArrayAdapter<BlockModel> {
 
       }
 
-    // 6. return rowView
+    // 7. return rowView
 
     return rowView;
   }

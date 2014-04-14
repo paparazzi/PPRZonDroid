@@ -22,13 +22,13 @@
 
 package com.PPRZonDroid;
 
-import android.app.Application;
 import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -36,7 +36,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-public class Telemetry extends Application {
+public class Telemetry {
 
   boolean DEBUG;
   public String SendToTcp = null;
@@ -77,12 +77,7 @@ public class Telemetry extends Application {
   private String String2parse_buf = "";
   private DatagramSocket socket = null;
 
-  /**
-   * Converts a given datagram packet's contents to a String.
-   */
-  static String string_from_datagrampacket(DatagramPacket packet) {
-    return new String(packet.getData(), 0, packet.getLength());
-  }
+
 
   /**
    * Prepares tcp connection
@@ -101,6 +96,9 @@ public class Telemetry extends Application {
     //Initial creation
     AircraftData = new AirCraft[MaxNumbOfAC];
 
+    //Create & recycle bitmap to prevent dalvik allocating too much ram for it..
+    Bitmap.Config conf = Bitmap.Config.ARGB_4444;
+    AcPfd = Bitmap.createBitmap((int)(240*GraphicsScaleFactor), (int)(140*GraphicsScaleFactor), conf);
   }
 
   /**
@@ -124,9 +122,10 @@ public class Telemetry extends Application {
     try {
 
       socket.receive(packet);
+
       //Log.d("PPRZ_info", "inp2");
 
-      // String2parse=new String(packet.getData());
+      //String2parse= (String) (packet.getData(), 0, packet.getLength());
       String2parse = string_from_datagrampacket(packet);
       //Log.d("PPRZ_info", "inp3");
       if ((String2parse != null) && (!String2parse.equals(String2parse_buf))) {
@@ -142,10 +141,19 @@ public class Telemetry extends Application {
 
   }
 
+  /**
+  * Converts a given datagram packet's contents to a String.
+  */
+  String UdpString;
+  static String string_from_datagrampacket(DatagramPacket packet) {
+
+     return new String(packet.getData(), 0, packet.getLength());
+  }
+
   //Draw pfd for selected aircraft
   private void draw_pfd(int AcInd) {
 
-    AcPfd = muiGraphics.create_pfd2(Double.parseDouble(AircraftData[SelAcInd].Roll), Double.parseDouble(AircraftData[SelAcInd].Pitch), Double.parseDouble(AircraftData[SelAcInd].Heading), AircraftData[SelAcInd].Altitude, AircraftData[SelAcInd].Battery, AircraftData[SelAcInd].GpsMode, GraphicsScaleFactor);
+    muiGraphics.create_pfd2(AcPfd, Double.parseDouble(AircraftData[SelAcInd].Roll), Double.parseDouble(AircraftData[SelAcInd].Pitch), Double.parseDouble(AircraftData[SelAcInd].Heading), AircraftData[SelAcInd].Altitude, AircraftData[SelAcInd].Battery, AircraftData[SelAcInd].GpsMode, GraphicsScaleFactor);
 
   }
 
@@ -288,11 +296,14 @@ public class Telemetry extends Application {
 
         }
         //Add position to queue (for map lines)
-        AircraftData[AcIndex].AC_Path.add(AircraftData[AcIndex].Position);
 
-        if (AircraftData[AcIndex].AC_Path.size() > 150) {
+
+        if (AircraftData[AcIndex].AC_Path.size() >= 10) {
           AircraftData[AcIndex].AC_Path.remove(0);
+
         }
+          AircraftData[AcIndex].AC_Path.add(AircraftData[AcIndex].Position);
+
 
         if (AircraftData[AcIndex].AC_Enabled) {
           AircraftData[AcIndex].AC_Position_Changed = true;
@@ -687,6 +698,7 @@ public class Telemetry extends Application {
     //Queue<LatLng> AC_Path;
     ArrayList<LatLng> AC_Path = new ArrayList<LatLng>();
     Polyline Ac_PolLine;
+      PolylineOptions Ac_PolLine_Options;
     String Altitude;
     boolean Altitude_Changed = false;
     LatLng Position;

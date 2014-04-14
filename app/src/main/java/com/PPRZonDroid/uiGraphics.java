@@ -111,14 +111,14 @@ public class uiGraphics {
    * Create AC carrot
    *
    * @param AcColor
-   * @param SizeFactor
+   * @param GraphicsScaleFactor
    * @return
    */
-  public Bitmap create_ac_carrot(String AcColor, float SizeFactor) {
+  public Bitmap create_ac_carrot(String AcColor, float GraphicsScaleFactor) {
 
 
-    int w = (int) (15 * SizeFactor);
-    int h = (int) (10 * SizeFactor);
+    int w = (int) (15 * GraphicsScaleFactor);
+    int h = (int) (10 * GraphicsScaleFactor);
     Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
     Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
     Canvas canvas = new Canvas(bmp);
@@ -157,12 +157,12 @@ public class uiGraphics {
     return bmp;
   }
 
-  private Canvas create_selected_canvas(Canvas CanvIn, int AcColor, float SizeFactor) {
+  private Canvas create_selected_canvas(Canvas CanvIn, int AcColor, float GraphicsScaleFactor) {
 
     int w = CanvIn.getWidth();
     int h = CanvIn.getHeight();
 
-    float SelLineLeng = 4 * SizeFactor;
+    float SelLineLeng = 4 * GraphicsScaleFactor;
 
     Path SelPath = new Path();
     SelPath.moveTo(0, 0); //1
@@ -187,16 +187,16 @@ public class uiGraphics {
     p.setColor(Color.YELLOW);
     p.setAntiAlias(true);
     p.setStyle(Paint.Style.STROKE);
-    p.setStrokeWidth(3 * SizeFactor);
+    p.setStrokeWidth(3 * GraphicsScaleFactor);
     CanvIn.drawPath(SelPath, p);
     return CanvIn;
   }
     private Bitmap bit_buf;
-    public Bitmap create_block_tooltip(Long PressTO,  Long TimePassed, float SizeFactor) {
+    public Bitmap create_block_tooltip(Long PressTO,  Long TimePassed, float GraphicsScaleFactor) {
 
         //validate color string
-        int w = (int) (80 * SizeFactor);
-        int h = (int) (30 * SizeFactor);
+        int w = (int) (80 * GraphicsScaleFactor);
+        int h = (int) (30 * GraphicsScaleFactor);
         float increment = (float) ((TimePassed*(5*w/6))/PressTO);
         if (increment>(5*w/6)) return bit_buf ;
 
@@ -219,8 +219,8 @@ public class uiGraphics {
 
         //Create tooltip box
         Path ToolTippath = new Path();
-        //ToolTippath.addRoundRect(r,(3*SizeFactor),(3*SizeFactor),Path.Direction.CW);
-        canvas.drawRoundRect(r,(5*SizeFactor),(5*SizeFactor), p);
+        //ToolTippath.addRoundRect(r,(3*GraphicsScaleFactor),(3*GraphicsScaleFactor),Path.Direction.CW);
+        canvas.drawRoundRect(r,(5*GraphicsScaleFactor),(5*GraphicsScaleFactor), p);
 
         //Create bound line
         Paint line = new Paint();
@@ -245,8 +245,8 @@ public class uiGraphics {
 
         RectF rTP = new RectF(0,0,increment,h);
 
-        //ToolTippath.addRoundRect(rTP,(3*SizeFactor),(3*SizeFactor),Path.Direction.CW);
-        canvas.drawRoundRect(rTP,(5*SizeFactor),(5*SizeFactor), TP);
+        //ToolTippath.addRoundRect(rTP,(3*GraphicsScaleFactor),(3*GraphicsScaleFactor),Path.Direction.CW);
+        canvas.drawRoundRect(rTP,(5*GraphicsScaleFactor),(5*GraphicsScaleFactor), TP);
 
 
 
@@ -273,10 +273,10 @@ public class uiGraphics {
    *
    * @param AcType      AC Type (fixedwing,rotorcraft or flyingwing. default :fixedwing ...
    * @param AcColorStrX Ac Color
-   * @param SizeFactor  Logo Scale factor
+   * @param GraphicsScaleFactor  Logo Scale factor
    * @return Bitmap
    */
-  public Bitmap create_ac_icon(String AcType, String AcColorStrX, float SizeFactor, boolean AcSelected) {
+  public Bitmap create_ac_icon(String AcType, String AcColorStrX, float GraphicsScaleFactor, boolean AcSelected) {
 
     //validate color string
     int AcColor = get_color(AcColorStrX);
@@ -285,14 +285,14 @@ public class uiGraphics {
     if (AcType.equals("rotorcraft")) {
 
 
-      int w = (int) (34 * SizeFactor);
-      int h = (int) (34 * SizeFactor);
+      int w = (int) (34 * GraphicsScaleFactor);
+      int h = (int) (34 * GraphicsScaleFactor);
       Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
       Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
       Canvas canvas = new Canvas(bmp);
 
       if (AcSelected) {
-        canvas = create_selected_canvas(canvas, AcColor, SizeFactor);
+        canvas = create_selected_canvas(canvas, AcColor, GraphicsScaleFactor);
       }
 
       //Create flyingwing logo
@@ -337,15 +337,15 @@ public class uiGraphics {
       return bmp;
     } else if (AcType.equals("flyingwing")) {
 
-      int w = (int) (30 * SizeFactor);
-      int h = (int) (15 * SizeFactor);
+      int w = (int) (30 * GraphicsScaleFactor);
+      int h = (int) (15 * GraphicsScaleFactor);
       Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
       Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
       Canvas canvas = new Canvas(bmp);
 
 
       if (AcSelected) {
-        canvas = create_selected_canvas(canvas, AcColor, SizeFactor);
+        canvas = create_selected_canvas(canvas, AcColor, GraphicsScaleFactor);
       }
 
       //Create flyingwing logo
@@ -382,14 +382,14 @@ public class uiGraphics {
     } else {
 
       //Create fixedwing logo
-      int w = (int) (28 * SizeFactor);
-      int h = (int) (28 * SizeFactor);
+      int w = (int) (28 * GraphicsScaleFactor);
+      int h = (int) (28 * GraphicsScaleFactor);
       Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
       Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
       Canvas canvas = new Canvas(bmp);
 
       if (AcSelected) {
-        canvas = create_selected_canvas(canvas, AcColor, SizeFactor);
+        canvas = create_selected_canvas(canvas, AcColor, GraphicsScaleFactor);
       }
 
       Paint p = new Paint();
@@ -441,11 +441,11 @@ public class uiGraphics {
   }
 
   //Creates icons for markers
-  public Bitmap create_marker_icon(String AcColorX, String MarkerName, float SizeFactor) {
+  public Bitmap create_marker_icon(String AcColorX, String MarkerName, float GraphicsScaleFactor) {
 
 
-    int w = (int) (24 * SizeFactor);
-    int h = (int) (24 * SizeFactor);
+    int w = (int) (24 * GraphicsScaleFactor);
+    int h = (int) (24 * GraphicsScaleFactor);
     Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
     Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
     Canvas canvas = new Canvas(bmp);
@@ -483,14 +483,14 @@ public class uiGraphics {
     //Text
 
     black.setTextAlign(Paint.Align.CENTER);
-    black.setStrokeWidth(2.3f * SizeFactor);
-    black.setTextSize(7f * SizeFactor);
+    black.setStrokeWidth(2.3f * GraphicsScaleFactor);
+    black.setTextSize(7f * GraphicsScaleFactor);
 
 
     p.setStyle(Paint.Style.STROKE);
     p.setTextAlign(Paint.Align.CENTER);
-    p.setTextSize(7f * SizeFactor);
-    p.setStrokeWidth(1f * SizeFactor);
+    p.setTextSize(7f * GraphicsScaleFactor);
+    p.setStrokeWidth(1f * GraphicsScaleFactor);
 
     canvas.drawText(MarkerName, (w / 2), ((3 * h / 8) - 4), black);
     canvas.drawText(MarkerName, (w / 2), ((3 * h / 8) - 4), p);
@@ -498,10 +498,10 @@ public class uiGraphics {
     return bmp;
   }
 
-  public Bitmap create_pfd2(double rollx, double pitchx, double yawx, String alt, String bat, String GpsStat, float SizeFactor) {
+  public void create_pfd2(Bitmap PfdBit, double rollx, double pitchx, double yawx, String alt, String bat, String GpsStat, float GraphicsScaleFactor) {
 
-    width = (int) (240 * SizeFactor);
-    height = (int) (140 * SizeFactor);
+    width = (int) (240 * GraphicsScaleFactor);
+    height = (int) (140 * GraphicsScaleFactor);
 
     roll = rollx;
     pitch = pitchx;
@@ -526,16 +526,16 @@ public class uiGraphics {
     whitebar.setAntiAlias(true);
 
     white.setColor(Color.WHITE);
-    white.setTextSize(9.0f * SizeFactor);
+    white.setTextSize(9.0f * GraphicsScaleFactor);
     white.setAntiAlias(true);
 
     whiteCenter.setColor(Color.WHITE);
-    whiteCenter.setTextSize(9.0f * SizeFactor);
+    whiteCenter.setTextSize(9.0f * GraphicsScaleFactor);
     whiteCenter.setTextAlign(Paint.Align.CENTER);
     whiteCenter.setAntiAlias(true);
 
     statusText.setColor(Color.WHITE);
-    statusText.setTextSize(15.0f * SizeFactor);
+    statusText.setTextSize(15.0f * GraphicsScaleFactor);
     statusText.setAntiAlias(true);
 
     whiteStroke.setColor(Color.WHITE);
@@ -551,9 +551,8 @@ public class uiGraphics {
     redSolid.setColor(Color.RED);
     redSolid.setAntiAlias(true);
 
-    Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
-    Bitmap bmp = Bitmap.createBitmap(width, height, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
-    Canvas canvas = new Canvas(bmp);
+
+    Canvas canvas = new Canvas(PfdBit);
 
     // clear screen
     canvas.drawColor(Color.rgb(20, 20, 20));
@@ -576,7 +575,7 @@ public class uiGraphics {
     drawPlane(canvas);
     canvas.restore();
 
-    return bmp;
+   // return bmp;
 
   }
 

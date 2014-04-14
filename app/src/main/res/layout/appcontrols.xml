@@ -20,7 +20,7 @@
     <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Clear A/C Track"
+        android:text="Clear AC Track"
         android:id="@+id/Button_ShowFlightZone"
         android:layout_gravity="center_horizontal"
         android:textColor="#000000"
@@ -34,23 +34,20 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"></LinearLayout>
 
-    <Switch
+
+
+    <ToggleButton
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Trace Aircraft"
-        android:id="@+id/switch_TraceAircraft"
-        android:layout_gravity="center_horizontal"
-        android:textColor="#000000"
-        android:switchTextAppearance="@style/TextAppearance.AppCompat.Light.Base.Widget.PopupMenu.Small"
-        android:singleLine="false"
-        android:lines="2"
-        android:textAlignment="textEnd"
-        android:switchPadding="1dp"
-        android:paddingLeft="5dp"
-        android:textSize="12dp"
-        android:textStyle="normal"
-        android:layout_marginRight="3dp"
-        android:onClick="trace_ac" />
+        android:text="Change visible AC Data"
+        android:id="@+id/toggleButton_TraceAircraft"
+        android:textSize="14dp"
+        android:textOn="Following AC"
+        android:textOff="Follow AC"
+        android:onClick="trace_ac"
+        android:checked="false" />
+
+
 
     <View
         android:layout_width="match_parent"
@@ -82,10 +79,10 @@
     <ToggleButton
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="New ToggleButton"
+        android:text="Change visible AC Data"
         android:id="@+id/toggleButtonVisibleAc"
         android:textSize="14dp"
-        android:textOn="Show All Acs"
+        android:textOn="Show All ACs"
         android:textOff="Only Selected AC"
         android:onClick="change_visible_acdata"
         android:checked="true" />
