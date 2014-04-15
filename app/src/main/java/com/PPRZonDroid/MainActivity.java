@@ -34,8 +34,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
@@ -195,8 +193,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
 
 
-    if ( Debug.isDebuggerConnected() ) DEBUG= true;
-    else DEBUG=false;
+    //if ( Debug.isDebuggerConnected() ) DEBUG= true;
+    //else DEBUG=false;
 
       //Get app settings
     AppSettings = PreferenceManager.getDefaultSharedPreferences(this);
@@ -383,10 +381,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   }
 
-    int ClickedBlockId;
-
-
-    /**
+   /**
    * Set Selected Block
    *
    * @param BlocId
@@ -418,8 +413,6 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     AC_DATA.SelAcInd = AcInd;
     //Set Title;
     setTitle(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Name);
-
-
 
     refresh_block_list();
     set_marker_visibility();
@@ -667,30 +660,24 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       }
     }
 
-    //mAcListAdapter.SelectedInd=AC_DATA.SelAcInd;
-
   }
 
   private void refresh_map_lines(int AcInd) {
 
-    /*if (AC_DATA.AircraftData[AcInd].Ac_PolLine != null) {
-      AC_DATA.AircraftData[AcInd].Ac_PolLine.remove();
-    }*/
-    // AC_DATA.AircraftData[AcInd].Ac_PolLine.remove();
-    //  if (AC_DATA.AircraftData[AcInd].Ac_PolLine_Options == null) {
-          PolylineOptions rectOptions = new PolylineOptions()
+    //Create the polyline object of ac if it hasn't been created before
+    if (null == AC_DATA.AircraftData[AcInd].Ac_PolLine) {
+          PolylineOptions mPolylineOptions = new PolylineOptions()
                   .addAll(AC_DATA.AircraftData[AcInd].AC_Path)
-                  .width(1.5f * AC_DATA.GraphicsScaleFactor)
+                  .width(2 * AC_DATA.GraphicsScaleFactor)
                   .color(AC_DATA.muiGraphics.get_color(AC_DATA.AircraftData[AcInd].AC_Color))
-                  .geodesic(true);
-          AC_DATA.AircraftData[AcInd].Ac_PolLine = mMap.addPolyline(rectOptions);
-     // }
+                  .geodesic(false);
+          AC_DATA.AircraftData[AcInd].Ac_PolLine = mMap.addPolyline(mPolylineOptions);
+     }
 
+    //Refresh polyline with new values
+    AC_DATA.AircraftData[AcInd].Ac_PolLine.setPoints(AC_DATA.AircraftData[AcInd].AC_Path);
 
-      //AC_DATA.AircraftData[AcInd].Ac_PolLine.setPoints(AC_DATA.AircraftData[AcInd].AC_Path);
-
-
-
+    //Clean the flags
     if (AcInd == AC_DATA.SelAcInd || ShowOnlySelected == false) {
       AC_DATA.AircraftData[AcInd].Ac_PolLine.setVisible(true);
     } else {
@@ -723,10 +710,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
                       .draggable(true)
                       .icon(BitmapDescriptorFactory.fromBitmap(AC_DATA.AircraftData[AcIndex].AC_Carrot_Logo))
       );
-
-
     }
-
   }
 
   //REfresh markers
@@ -786,7 +770,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
             if ((AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpPosition == null) || (AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarker != null))
               continue; //we dont have data for this wp yet
 
-            if (DEBUG)Log.d("PPRZ_info", "New marker added for Ac id: " + AcInd + " wpind:" + MarkerInd);
+            if (DEBUG) Log.d("PPRZ_info", "New marker added for Ac id: " + AcInd + " wpind:" + MarkerInd);
             AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarker = mMap.addMarker(new MarkerOptions()
                     .position(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpPosition)
                     .title(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpName)
@@ -822,7 +806,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         if (AC_DATA.AircraftData[AcInd].MarkerModified) {   //Does this aircraft has an added marker data?
           Log.d("PPRZ_info", "Marker modified for AC= " + AcInd);
           int MarkerInd = 1;
-          //Log.d("PPRZ_info", "trying to show ac markers of "+AcInd);
+          //if (DEBUG) Log.d("PPRZ_info", "trying to show ac markers of "+AcInd);
           //Search aircraft markers which has name but doesn't have marker
           for (MarkerInd = 1; (MarkerInd < AC_DATA.AircraftData[AcInd].NumbOfWps - 1); MarkerInd++) {
             //Log.d("PPRZ_info", "Searching Marker for AC= " + AcInd + " wpind:" + MarkerInd);
@@ -834,7 +818,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
             //Clean MarkerModified flag
             AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].MarkerModified = false;
-            Log.d("PPRZ_info", "Marker modified for acid: " + AcInd + " wpind:" + MarkerInd);
+            if (DEBUG) Log.d("PPRZ_info", "Marker modified for acid: " + AcInd + " wpind:" + MarkerInd);
 
           }
           //Clean AC MarkerModified flag
@@ -1416,13 +1400,13 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         }
 
 
-        if (AC_DATA.NewAcAdded || AC_DATA.BatteryChanged) {
+        if (AC_DATA.NewAcAdded) {
           //new ac addedBattery value for an ac is changed
           //refresh_ac_list();
 
-            set_selected_ac(AC_DATA.SelAcInd,false);
-            AC_DATA.BatteryChanged = false;
-            AC_DATA.NewAcAdded = false;
+          set_selected_ac(AC_DATA.SelAcInd,false);
+          AC_DATA.BatteryChanged = false;
+          AC_DATA.NewAcAdded = false;
         }
 
         //For a smooth gui we need refresh only changed gui controls
@@ -1438,11 +1422,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
           MapAlt.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude + "m");
 
             AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude_Changed = false;
-            //TODO correct pfd
 
-          //Drawable d = new BitmapDrawable(getResources(), );
-
-          //Pfd.setImageDrawable(d);
             Pfd.setImageBitmap(AC_DATA.AcPfd);
 
         }

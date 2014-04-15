@@ -144,7 +144,6 @@ public class Telemetry {
   /**
   * Converts a given datagram packet's contents to a String.
   */
-  String UdpString;
   static String string_from_datagrampacket(DatagramPacket packet) {
 
      return new String(packet.getData(), 0, packet.getLength());
@@ -200,7 +199,7 @@ public class Telemetry {
           if (DEBUG) Log.d("PPRZ_info", "NAV_STATUS can't be parsed!");
 
       }
-    }//END OF NAV_STATUS
+    }//END OF AP_STATUS
 
 
     //Parse Nav_Status
@@ -256,7 +255,6 @@ public class Telemetry {
           //check_marker_options(AcIndex); //Check if AC is ready to be shown on ui
         }
 
-
         AircraftData[AcIndex].EngineStatusChanged = true;
         if (AircraftData[AcIndex].AC_Enabled) {
           ViewChanged = true;
@@ -297,13 +295,10 @@ public class Telemetry {
         }
         //Add position to queue (for map lines)
 
-
-        if (AircraftData[AcIndex].AC_Path.size() >= 10) {
+        if (AircraftData[AcIndex].AC_Path.size() >= 150) {
           AircraftData[AcIndex].AC_Path.remove(0);
-
         }
           AircraftData[AcIndex].AC_Path.add(AircraftData[AcIndex].Position);
-
 
         if (AircraftData[AcIndex].AC_Enabled) {
           AircraftData[AcIndex].AC_Position_Changed = true;
@@ -316,8 +311,6 @@ public class Telemetry {
           }
         }
 
-
-        //Other variables will be here>>><<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         return;
       } else {
         if (DEBUG) Log.d("PPRZ_info", "ENGINE_STATUS can't be parsed!");
@@ -345,9 +338,9 @@ public class Telemetry {
         //We need to check latlong variables if they are different then they should be shown in ui;
         LatLng LatLngBuf = new LatLng(Double.parseDouble(ParsedData[4]), Double.parseDouble(ParsedData[5]));
 
-        //if incoming latlon is different then before
+        //if incoming latlong is different then before
         if (!(LatLngBuf.equals(AircraftData[AcIndex].AC_Markers[WpInd].WpPosition))) {
-          if (DEBUG) Log.d("PPRZ_info", "marker changed  for Ac id: " + AcIndex + " wpind:" + WpInd);
+          if (DEBUG) Log.d("PPRZ_info", "Marker changed  for Ac id: " + AcIndex + " wpind:" + WpInd);
           AircraftData[AcIndex].AC_Markers[WpInd].WpPosition = LatLngBuf;
           AircraftData[AcIndex].AC_Markers[WpInd].MarkerModified = true;
           AircraftData[AcIndex].MarkerModified = true;
@@ -372,47 +365,7 @@ public class Telemetry {
 
     }//END OF  WAYPOINT_MOVED
 
-    //Parse AirSpeed -->>GET DATA FROM FLIGHT_PARAM
-      /*
-    if (LastTelemetryString.matches("(^\\S* AIRSPEED (\\S*) (\\S*) (\\S*) (\\S*))")) {
 
-      String[] ParsedData = LastTelemetryString.split(" ");
-      int AcIndex = get_indexof_ac(Integer.parseInt(ParsedData[0]));
-
-      if (AcIndex >= 0) {
-
-        AircraftData[AcIndex].AirSpeed = ParsedData[2].substring(0, (ParsedData[2].indexOf(".") + 2));
-
-        if (AircraftData[AcIndex].AC_Enabled && AcIndex == SelAcInd) {
-          //Changed airspeed
-          AirspeedChanged = true;
-          ViewChanged = true;
-
-          if ((Double.parseDouble(AircraftData[AcIndex].AirSpeed) < AirSpeedMinSetting) && (Double.parseDouble(AircraftData[AcIndex].AirSpeed) > AIRSPEED_MIN)) {
-            AirspeedWarning = true;
-          } else {
-            //Check other AC's airspeed;
-            int i = 0;
-            for (i = 0; i <= IndexEnd; i++) {
-              if ((Double.parseDouble(AircraftData[AcIndex].AirSpeed) < AirSpeedMinSetting) && (Double.parseDouble(AircraftData[AcIndex].AirSpeed) > AIRSPEED_MIN)) {
-                AirspeedWarning = true;
-                return;
-              }
-
-            }
-            AirspeedWarning = false;
-          }
-
-          return;
-        }
-
-        return;
-      } else {
-        if (DEBUG) Log.d("PPRZ_info", "AIRSPEED can't be parsed!");
-
-      }
-    }//END OF AIRSPEED
-  */
   } //End of parse_udp_string
 
   /**
@@ -632,7 +585,6 @@ public class Telemetry {
       AircraftData[IndexOfAc].AC_Markers[WpId].WpId = WpId;
       AircraftData[IndexOfAc].AC_Markers[WpId].WpEnabled = true;
       AircraftData[IndexOfAc].NumbOfWps++;
-      //TODO create marker icon
       //get_new_waypoint_data(AircraftData[IndexOfAc].AC_Id);
       return true;
     }
