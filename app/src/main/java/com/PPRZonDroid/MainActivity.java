@@ -775,6 +775,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
                     .position(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpPosition)
                     .title(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpName)
                     .draggable(true)
+                    .anchor(0.5f,0.6875f)
                     .icon(BitmapDescriptorFactory.fromBitmap(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarkerIcon)));
             AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarker.setVisible(AcMarkerVisible(AcInd));
 
@@ -1405,9 +1406,18 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
           //refresh_ac_list();
 
           set_selected_ac(AC_DATA.SelAcInd,false);
-          AC_DATA.BatteryChanged = false;
+          //AC_DATA.BatteryChanged = false;
           AC_DATA.NewAcAdded = false;
         }
+
+          if (AC_DATA.BatteryChanged) {
+              //new ac addedBattery value for an ac is changed
+              refresh_ac_list();
+              mAcListAdapter.notifyDataSetChanged();
+              //set_selected_ac(AC_DATA.SelAcInd,false);
+              AC_DATA.BatteryChanged = false;
+              //AC_DATA.NewAcAdded = false;
+          }
 
         //For a smooth gui we need refresh only changed gui controls
         refresh_markers();

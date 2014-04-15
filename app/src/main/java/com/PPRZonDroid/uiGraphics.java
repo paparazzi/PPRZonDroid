@@ -444,30 +444,25 @@ public class uiGraphics {
   public Bitmap create_marker_icon(String AcColorX, String MarkerName, float GraphicsScaleFactor) {
 
 
-    int w = (int) (24 * GraphicsScaleFactor);
-    int h = (int) (24 * GraphicsScaleFactor);
+    int w = (int) (34 * GraphicsScaleFactor); //24
+    int h = (int) (40 * GraphicsScaleFactor);
     Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
     Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
     Canvas canvas = new Canvas(bmp);
 
-
-    //Create fixedwing logo
     Paint p = new Paint();
-
     p.setColor(get_color(AcColorX));
-
-
     p.setStyle(Paint.Style.FILL);
     p.setAntiAlias(true);
 
     Path MarkerPath = new Path();
-    MarkerPath.moveTo((w / 2), (h - 2));  //point 1
-    MarkerPath.lineTo((3 * w / 8), (6 * h / 8)); //point 2
-    MarkerPath.lineTo(2, (6 * h / 8));    //point 3
-    MarkerPath.lineTo(2, (3 * h / 8));    //point 4
-    MarkerPath.lineTo((h - 2), (3 * h / 8));   //point 5
-    MarkerPath.lineTo((h - 2), (6 * h / 8));   //point 6
-    MarkerPath.lineTo((5 * w / 8), (6 * h / 8)); //point 7
+    MarkerPath.moveTo((w / 2), (11*h/16));  //point 1
+    MarkerPath.lineTo((7*w/16), (9*h/16)); //point 2
+    MarkerPath.lineTo((2*w/8), (9*h/16));    //point 3
+    MarkerPath.lineTo((2*w/8), (2*h/8));    //point 4
+    MarkerPath.lineTo((6*w/8), (2*h/8));   //point 5
+    MarkerPath.lineTo((6*w/8), (9*h/16));   //point 6
+    MarkerPath.lineTo((9*w/16), (9*h/16)); //point 7
 
     MarkerPath.close();
 
@@ -484,16 +479,19 @@ public class uiGraphics {
 
     black.setTextAlign(Paint.Align.CENTER);
     black.setStrokeWidth(2.3f * GraphicsScaleFactor);
-    black.setTextSize(7f * GraphicsScaleFactor);
+    black.setTextSize(8f * GraphicsScaleFactor);
+
+    //for DEBUG
+    //canvas.drawRect(0,0,w,h,black);
 
 
     p.setStyle(Paint.Style.STROKE);
     p.setTextAlign(Paint.Align.CENTER);
-    p.setTextSize(7f * GraphicsScaleFactor);
+    p.setTextSize(8f * GraphicsScaleFactor);
     p.setStrokeWidth(1f * GraphicsScaleFactor);
 
-    canvas.drawText(MarkerName, (w / 2), ((3 * h / 8) - 4), black);
-    canvas.drawText(MarkerName, (w / 2), ((3 * h / 8) - 4), p);
+    canvas.drawText(MarkerName, (w / 2),(3*h/16), black);
+    canvas.drawText(MarkerName, (w / 2),(3*h/16), p);
 
     return bmp;
   }
