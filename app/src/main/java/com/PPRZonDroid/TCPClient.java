@@ -41,6 +41,7 @@ public class TCPClient {
 
   public String SERVERIP;
   public int SERVERPORT;
+  public boolean DEBUG;
   public boolean TCPConnected = false; //indicates whether
   PrintWriter out;
   BufferedReader in;
@@ -104,7 +105,7 @@ public class TCPClient {
 
     } catch (IOException e2) {
       TCPConnected = false;
-      Log.d("PPRZ_info", "TCP comm problem");
+        if (DEBUG) Log.d("PPRZ_info", "TCP comm problem");
     }
     return ReceivedMsg;
   }

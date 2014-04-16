@@ -191,82 +191,6 @@ public class uiGraphics {
     CanvIn.drawPath(SelPath, p);
     return CanvIn;
   }
-    private Bitmap bit_buf;
-    public Bitmap create_block_tooltip(Long PressTO,  Long TimePassed, float GraphicsScaleFactor) {
-
-        //validate color string
-        int w = (int) (80 * GraphicsScaleFactor);
-        int h = (int) (30 * GraphicsScaleFactor);
-        float increment = (float) ((TimePassed*(5*w/6))/PressTO);
-        if (increment>(5*w/6)) return bit_buf ;
-
-
-            Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
-            Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
-            Canvas canvas = new Canvas(bmp);
-
-             //Create flyingwing logo
-        Paint p = new Paint();
-
-        p.setColor(Color.WHITE);
-
-
-        p.setStyle(Paint.Style.FILL);
-            //p.setStrokeWidth(2f);
-        p.setAntiAlias(true);
-
-        RectF r = new RectF(0,0,(w-w/6),h);
-
-        //Create tooltip box
-        Path ToolTippath = new Path();
-        //ToolTippath.addRoundRect(r,(3*GraphicsScaleFactor),(3*GraphicsScaleFactor),Path.Direction.CW);
-        canvas.drawRoundRect(r,(5*GraphicsScaleFactor),(5*GraphicsScaleFactor), p);
-
-        //Create bound line
-        Paint line = new Paint();
-        line.setColor(Color.WHITE);
-        line.setStyle(Paint.Style.STROKE);
-        line.setStrokeWidth(6f);
-        line.setAntiAlias(true);
-
-        ToolTippath.moveTo((w-w/6), (h / 2));
-        ToolTippath.lineTo((w), (h/2));
-        canvas.drawPath(ToolTippath, line);
-
-        //create
-        Paint TP = new Paint();
-
-        TP.setColor(Color.GREEN);
-
-
-        TP.setStyle(Paint.Style.FILL);
-        //p.setStrokeWidth(2f);
-        TP.setAntiAlias(true);
-
-        RectF rTP = new RectF(0,0,increment,h);
-
-        //ToolTippath.addRoundRect(rTP,(3*GraphicsScaleFactor),(3*GraphicsScaleFactor),Path.Direction.CW);
-        canvas.drawRoundRect(rTP,(5*GraphicsScaleFactor),(5*GraphicsScaleFactor), TP);
-
-
-
-
-/*
-
-            Paint black = new Paint();
-            black.setColor(Color.BLACK);
-            black.setStyle(Paint.Style.STROKE);
-            black.setStrokeWidth(6f);
-            black.setAntiAlias(true);
-
-            canvas.drawPath(ToolTippath, black);
-            p.setStrokeWidth(3.5f);
-            canvas.drawPath(ToolTippath, p);*/
-        bit_buf=bmp;
-            return bmp;
-
-
-    }
 
   /**
    * Method create AC Logo
@@ -295,7 +219,7 @@ public class uiGraphics {
         canvas = create_selected_canvas(canvas, AcColor, GraphicsScaleFactor);
       }
 
-      //Create flyingwing logo
+      //Create rotorcraft logo
       Paint p = new Paint();
 
       p.setColor(AcColor);
@@ -318,10 +242,6 @@ public class uiGraphics {
       ACpath.lineTo((w / 2), (2 * h / 16));
       ACpath.lineTo((10 * w / 16), (5 * h / 16));
       ACpath.lineTo((w / 2), (5 * h / 16));
-
-      //ACpath.lineTo((w/8),(7*h/8));
-      //ACpath.close();
-      //border
 
       canvas.drawPath(ACpath, p);
 
@@ -445,7 +365,7 @@ public class uiGraphics {
 
 
     int w = (int) (34 * GraphicsScaleFactor); //24
-    int h = (int) (40 * GraphicsScaleFactor);
+    int h = (int) (54 * GraphicsScaleFactor);
     Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
     Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
     Canvas canvas = new Canvas(bmp);
@@ -456,13 +376,13 @@ public class uiGraphics {
     p.setAntiAlias(true);
 
     Path MarkerPath = new Path();
-    MarkerPath.moveTo((w / 2), (11*h/16));  //point 1
-    MarkerPath.lineTo((7*w/16), (9*h/16)); //point 2
-    MarkerPath.lineTo((2*w/8), (9*h/16));    //point 3
-    MarkerPath.lineTo((2*w/8), (2*h/8));    //point 4
-    MarkerPath.lineTo((6*w/8), (2*h/8));   //point 5
-    MarkerPath.lineTo((6*w/8), (9*h/16));   //point 6
-    MarkerPath.lineTo((9*w/16), (9*h/16)); //point 7
+    MarkerPath.moveTo((w / 2), (6*h/16));  //point 1
+    MarkerPath.lineTo((7*w/16), (5*h/16)); //point 2
+    MarkerPath.lineTo((2*w/8), (5*h/16));    //point 3
+    MarkerPath.lineTo((2*w/8), (2));    //point 4  (2*h/8)
+    MarkerPath.lineTo((6*w/8), (2));   //point 5
+    MarkerPath.lineTo((6*w/8), (5*h/16));   //point 6
+    MarkerPath.lineTo((9*w/16), (5*h/16)); //point 7
 
     MarkerPath.close();
 
@@ -478,7 +398,7 @@ public class uiGraphics {
     //Text
 
     black.setTextAlign(Paint.Align.CENTER);
-    black.setStrokeWidth(2.3f * GraphicsScaleFactor);
+    black.setStrokeWidth(3f * GraphicsScaleFactor);
     black.setTextSize(8f * GraphicsScaleFactor);
 
     //for DEBUG
@@ -490,8 +410,8 @@ public class uiGraphics {
     p.setTextSize(8f * GraphicsScaleFactor);
     p.setStrokeWidth(1f * GraphicsScaleFactor);
 
-    canvas.drawText(MarkerName, (w / 2),(3*h/16), black);
-    canvas.drawText(MarkerName, (w / 2),(3*h/16), p);
+    canvas.drawText(MarkerName, (w / 2),(7*h/32), black);
+    canvas.drawText(MarkerName, (w / 2),(7*h/32), p);
 
     return bmp;
   }

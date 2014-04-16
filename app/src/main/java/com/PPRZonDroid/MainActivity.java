@@ -41,7 +41,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Debug;
 import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
@@ -82,8 +81,8 @@ import static java.lang.Double.parseDouble;
 
 public class MainActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
- //IMPORTANT FLAG MUST BE 'FALSE' FOR SIGNED APK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  boolean DEBUG=true;
+  //TODO ! FLAG MUST BE 'FALSE' FOR PLAY STORE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  boolean DEBUG=false;
 
   //Application Settings
   public static final String SERVER_IP_ADDRESS = "server_ip_adress_text";
@@ -775,7 +774,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
                     .position(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpPosition)
                     .title(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpName)
                     .draggable(true)
-                    .anchor(0.5f,0.6875f)
+                    .anchor(0.5f,0.378f)
                     .icon(BitmapDescriptorFactory.fromBitmap(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarkerIcon)));
             AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarker.setVisible(AcMarkerVisible(AcInd));
 
@@ -805,7 +804,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       for (AcInd = 0; AcInd <= AC_DATA.IndexEnd; AcInd++) {     //Search thru all aircrafts and check if they have marker added flag
 
         if (AC_DATA.AircraftData[AcInd].MarkerModified) {   //Does this aircraft has an added marker data?
-          Log.d("PPRZ_info", "Marker modified for AC= " + AcInd);
+          if (DEBUG) Log.d("PPRZ_info", "Marker modified for AC= " + AcInd);
           int MarkerInd = 1;
           //if (DEBUG) Log.d("PPRZ_info", "trying to show ac markers of "+AcInd);
           //Search aircraft markers which has name but doesn't have marker

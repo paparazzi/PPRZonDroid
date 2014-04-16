@@ -84,6 +84,7 @@ public class Telemetry {
    */
   public void tcp_connection() {
     mTcpClient = new TCPClient();
+    mTcpClient.DEBUG= DEBUG;
 
     mTcpClient.SERVERIP = ServerIp;
     mTcpClient.SERVERPORT = ServerTcpPort;
@@ -172,9 +173,7 @@ public class Telemetry {
       int AcIndex = get_indexof_ac(Integer.parseInt(ParsedData[2]));
 
       if (AcIndex >= 0) {
-        //
-        //
-        // AircraftData[AcIndex].FlightTime
+
         AircraftData[AcIndex].ApMode = ParsedData[3];
         AircraftData[AcIndex].GpsMode = ParsedData[7];
         AircraftData[AcIndex].StateFilterMode = ParsedData[10];
@@ -193,11 +192,10 @@ public class Telemetry {
         if (AircraftData[AcIndex].AC_Enabled && AcIndex == SelAcInd) {
           ViewChanged = true;
         }
-
         return;
       } else {
-          if (DEBUG) Log.d("PPRZ_info", "NAV_STATUS can't be parsed!");
-
+        if (DEBUG) Log.d("PPRZ_info", "NAV_STATUS can't be parsed!");
+        return;
       }
     }//END OF AP_STATUS
 
@@ -226,8 +224,8 @@ public class Telemetry {
         AircraftData[AcIndex].SelectedBlock = BlockId;
         return;
       } else {
-          if (DEBUG) Log.d("PPRZ_info", "NAV_STATUS can't be parsed!");
-
+        if (DEBUG) Log.d("PPRZ_info", "NAV_STATUS can't be parsed!");
+        return;
       }
     }//END OF NAV_STATUS
 
@@ -259,11 +257,10 @@ public class Telemetry {
         if (AircraftData[AcIndex].AC_Enabled) {
           ViewChanged = true;
         }
-
         return;
       } else {
         if (DEBUG) Log.d("PPRZ_info", "ENGINE_STATUS can't be parsed!");
-
+        return;
       }
     }//END OF ENGINE_STATUS
 
@@ -310,7 +307,6 @@ public class Telemetry {
             draw_pfd(AcIndex);
           }
         }
-
         return;
       } else {
         if (DEBUG) Log.d("PPRZ_info", "ENGINE_STATUS can't be parsed!");
@@ -354,8 +350,6 @@ public class Telemetry {
           AircraftData[AcIndex].NewMarkerAdded = true;
           ViewChanged = true;
         }
-
-
         return;
       } else {
         if (DEBUG) Log.d("PPRZ_info", "WAYPOINT_MOVED can't be parsed!");
@@ -397,12 +391,11 @@ public class Telemetry {
         AircraftData[AcIndex].AC_Logo = muiGraphics.create_ac_icon(AircraftData[AcIndex].AC_Type, AircraftData[AcIndex].AC_Color, GraphicsScaleFactor, (AcIndex == SelAcInd));
         AircraftData[AcIndex].AC_Carrot_Logo = muiGraphics.create_ac_carrot(AircraftData[AcIndex].AC_Color, GraphicsScaleFactor);
 
-
-        //if (DEBUG) Log.d("PPRZ_info", "Ind: " + AcIndex + " name" + AircraftData[AcIndex].AC_Name + "color" + AircraftData[AcIndex].AC_Color);
-
-
+        if (DEBUG) Log.d("PPRZ_info", "AC Data received. Ind: " + AcIndex + " Name" + AircraftData[AcIndex].AC_Name + " Color" + AircraftData[AcIndex].AC_Color);
+        return;
       }
       if (DEBUG) Log.d("PPRZ_info", "AppServer ACd can't be parsed!");
+      return;
     }
 
     //Parse waypoint data
@@ -422,11 +415,10 @@ public class Telemetry {
           AircraftData[AcIndex].AC_Markers[Integer.parseInt(ParsedWpData[0])].WpName = ParsedWpData[1];
           AircraftData[AcIndex].AC_Markers[Integer.parseInt(ParsedWpData[0])].WpMarkerIcon = muiGraphics.create_marker_icon(AircraftData[AcIndex].AC_Color, ParsedWpData[1], GraphicsScaleFactor);
 
-          if (DEBUG) Log.d("PPRZ_info", "wp parsed for ac=" + AcIndex + " marker ind=" + Integer.parseInt(ParsedWpData[0]));
+          if (DEBUG) Log.d("PPRZ_info", "WP parsed for ac= " + AcIndex + " marker ind=" + Integer.parseInt(ParsedWpData[0]));
 
         }
         AircraftData[AcIndex].MarkersEnabled = true;
-
       }
       return;
     }
@@ -454,10 +446,11 @@ public class Telemetry {
         }
         AircraftData[AcIndex].BlocksEnabled = true;
         AircraftData[AcIndex].BlockCount = ParsedBlData.length - 1;
-
       }
+      return;
     }
-
+    //This will be handy in future. (Sending IVY messages with TCP)
+    parse_udp_string(LastTelemetryString);
   } //End of parse_tcp_string
 
   //Check all needed ac datas are here to show on ui

@@ -16,7 +16,7 @@
     <string name="pref_header_con_settings">Connection Settings</string>
 
     <string name="pref_ip_address_title">Server Ip Address</string>
-    <string name="pref_ip_address_default">10.31.6.28</string>
+    <string name="pref_ip_address_default">192.168.1.1</string>
 
 
     <string name="pref_port_number_title">Server Port Number</string>
