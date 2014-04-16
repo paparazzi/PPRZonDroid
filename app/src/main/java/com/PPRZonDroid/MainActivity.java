@@ -82,7 +82,7 @@ import static java.lang.Double.parseDouble;
 public class MainActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
   //TODO ! FLAG MUST BE 'FALSE' FOR PLAY STORE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  boolean DEBUG=false;
+  boolean DEBUG=true;
 
   //Application Settings
   public static final String SERVER_IP_ADDRESS = "server_ip_adress_text";
@@ -300,7 +300,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
           public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
               BL_CountDown.cancel();
-              BL_CountDownTimerValue=0;
+              BL_CountDownTimerValue=BL_CountDownTimerDuration;
               mBlListAdapter.ClickedInd = position-1;
               JumpToBlock= position-1;
 
@@ -322,26 +322,30 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   private void setup_counter() {
       //Get timeout from appsettings
       BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString("block_change_timeout", "4000"));
-
+      BL_CountDownTimerValue =BL_CountDownTimerDuration;
       //Setup timer for progressbar of clicked block
-      BL_CountDown = new CountDownTimer(BL_CountDownTimerDuration, ((int)BL_CountDownTimerDuration/100))  {
+      BL_CountDown = new CountDownTimer(BL_CountDownTimerDuration, 100 ) {
           @Override
           public void onTick(long l) {
 
               if (BL_CountDownTimerDuration>0) {
-                  mBlListAdapter.BlProgress.setProgress(BL_CountDownTimerValue);
-                  BL_CountDownTimerValue++;
+                  BL_CountDownTimerValue= BL_CountDownTimerValue - 100;
+                  mBlListAdapter.BlProgress.setProgress(((BL_CountDownTimerValue*100) /BL_CountDownTimerDuration)) ;
+                  //if (DEBUG) Log.d("PPRZ_info", "Counter value: " + process_val );
               }
           }
 
           @Override
           public void onFinish() {
               if (BL_CountDownTimerDuration>0) {
-                  BL_CountDownTimerValue = 0;
-                  mBlListAdapter.BlProgress.setProgress(BL_CountDownTimerValue);
+
+                  BL_CountDownTimerValue= BL_CountDownTimerValue - 100;
+                  mBlListAdapter.BlProgress.setProgress(((BL_CountDownTimerValue*100) /BL_CountDownTimerDuration)) ;
+                  BL_CountDownTimerValue = BL_CountDownTimerDuration;
                   mBlListAdapter.ClickedInd = -1;
                   set_selected_block(JumpToBlock, false);
                   mBlListAdapter.notifyDataSetChanged();
+
               }
           }
 
@@ -366,7 +370,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
           if (position >= 1) {
            BL_CountDown.cancel();
-           BL_CountDownTimerValue=0;
+           BL_CountDownTimerValue=BL_CountDownTimerDuration;
            mBlListAdapter.ClickedInd=-1;
            mBlListAdapter.notifyDataSetChanged();
 
@@ -1099,7 +1103,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     public void confirm_bl_change(View mView) {
         //Cancel timer & clear BlockList
         BL_CountDown.cancel();
-        BL_CountDownTimerValue=0;
+        BL_CountDownTimerValue=BL_CountDownTimerDuration;
         mBlListAdapter.ClickedInd=-1;
         mBlListAdapter.notifyDataSetChanged();
         //Notify app_server for changes
@@ -1110,9 +1114,10 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     public void cancel_bl_change(View mView) {
         //Cancel timer & clear BlockList
         BL_CountDown.cancel();
-        BL_CountDownTimerValue=0;
+        BL_CountDownTimerValue=BL_CountDownTimerDuration;
         mBlListAdapter.ClickedInd=-1;
         mBlListAdapter.notifyDataSetChanged();
+        Toast.makeText(getApplicationContext(), "Block change cancelled.", Toast.LENGTH_SHORT).show();
 
 
     }
