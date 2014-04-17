@@ -280,6 +280,15 @@ public class Telemetry {
         AircraftData[AcIndex].Position = new LatLng(Double.parseDouble(ParsedData[6]), Double.parseDouble(ParsedData[7]));
         AircraftData[AcIndex].Speed = ParsedData[8].substring(0, (ParsedData[8].indexOf(".") + 2));
         AircraftData[AcIndex].Altitude = ParsedData[10].substring(0, ParsedData[10].indexOf("."));
+        AircraftData[AcIndex].AGL = ParsedData[12].substring(0, ParsedData[12].indexOf("."));
+
+        if (!AircraftData[AcIndex].Altitude.equals(AircraftData[AcIndex].AGL)) {
+            AircraftData[AcIndex].Altitude = AircraftData[AcIndex].Altitude + " m (AGL:" + AircraftData[AcIndex].AGL + ")";
+        }
+          else
+        {
+            AircraftData[AcIndex].Altitude = AircraftData[AcIndex].Altitude + " m";
+        }
 
         String BufAirspeed= ParsedData[15].substring(0, ParsedData[15].indexOf(".") + 1);
 
@@ -646,6 +655,7 @@ public class Telemetry {
       PolylineOptions Ac_PolLine_Options;
     String Altitude;
     boolean Altitude_Changed = false;
+    String AGL;
     LatLng Position;
     String Heading = "0";
     String Speed;

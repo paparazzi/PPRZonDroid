@@ -321,7 +321,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   private void setup_counter() {
       //Get timeout from appsettings
-      BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString("block_change_timeout", "4000"));
+      BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString("block_change_timeout", "3")) *1000;
       BL_CountDownTimerValue =BL_CountDownTimerDuration;
       //Setup timer for progressbar of clicked block
       BL_CountDown = new CountDownTimer(BL_CountDownTimerDuration, 100 ) {
@@ -1052,13 +1052,10 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     }
 
       if (key.equals(BLOCK_C_TIMEOUT)) {
-          BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString(BLOCK_C_TIMEOUT, "4000"));
+          BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString(BLOCK_C_TIMEOUT, "3"))*1000;
           setup_counter();
           if (DEBUG) Log.d("PPRZ_info", "Clock change timeout changed : " + AppSettings.getString(BLOCK_C_TIMEOUT , ""));
       }
-
-
-
 
   }
 
@@ -1433,7 +1430,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         }
 
         if (AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude_Changed) {
-          MapAlt.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude + "m");
+          MapAlt.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude);
 
             AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude_Changed = false;
 

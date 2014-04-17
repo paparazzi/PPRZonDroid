@@ -79,7 +79,7 @@ class SettingsFragment extends PreferenceFragment implements SharedPreferences.O
     connectionPref4.setSummary((PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(MIN_AIRSPEED, "")) + " m/s");
 
       Preference connectionPref5 = findPreference(BLOCK_C_TIMEOUT);
-      connectionPref5.setSummary((PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(BLOCK_C_TIMEOUT, "")) + " ms");
+      connectionPref5.setSummary((PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(BLOCK_C_TIMEOUT, "")) + " sec");
   }
 
   @Override
@@ -113,7 +113,7 @@ class SettingsFragment extends PreferenceFragment implements SharedPreferences.O
         Preference connectionPref = findPreference(key);
         //Set summary to be the user-description for the selected value
         assert connectionPref != null;
-        connectionPref.setSummary(sharedPreferences.getString(key, "") + " ms");
+        connectionPref.setSummary(sharedPreferences.getString(key, "") + " sec");
     }
 
     //Log.d("PPRZ_info", "Preference changed");

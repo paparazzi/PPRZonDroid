@@ -424,7 +424,7 @@ public class uiGraphics {
     roll = rollx;
     pitch = pitchx;
     yaw = yawx;
-    altitude = alt + "m";
+    altitude = alt;
     battVolt = bat + "v";
     gpsFix = GpsStat;
 

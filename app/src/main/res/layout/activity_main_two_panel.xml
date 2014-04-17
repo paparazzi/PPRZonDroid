@@ -209,6 +209,20 @@
                 android:layout_marginLeft="4dp"
                 android:layout_marginRight="4dp"></View>
 
+
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:layout_gravity="bottom"
+            android:background="#1b1b1b"
+            android:baselineAligned="false"
+            android:layout_weight="5"
+            android:paddingTop="3dp"
+            android:paddingRight="5dp"
+            android:paddingLeft="4dp">
+
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -218,7 +232,8 @@
 
             <View
                 android:layout_width="5dp"
-                android:layout_height="fill_parent"></View>
+                android:layout_height="fill_parent"
+                android:id="@+id/space2" ></View>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -249,9 +264,7 @@
 
             <View
                 android:layout_width="5dp"
-                android:layout_height="fill_parent"
-                android:id="@+id/space3"></View>
-
+                android:layout_height="fill_parent"></View>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -273,17 +286,6 @@
                 android:layout_marginLeft="4dp"
                 android:layout_marginRight="4dp"></View>
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/imageView8"
-                />
-
-            <View
-                android:layout_width="5dp"
-                android:layout_height="fill_parent"
-                android:id="@+id/space2" ></View>
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -293,9 +295,22 @@
                 android:textColor="#fff8f9"
                 android:textStyle="bold"
                 android:textSize="14dp"
+                android:focusable="false"
                 android:visibility="gone" />
 
+            <View
+                android:layout_width="5dp"
+                android:layout_height="fill_parent"
+                android:id="@+id/space3"></View>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView8"
+                />
+
         </LinearLayout>
+
 
         <LinearLayout
                 android:orientation="vertical"
