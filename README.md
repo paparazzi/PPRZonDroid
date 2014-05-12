@@ -9,7 +9,7 @@ The user documentation can be found at http://http://wiki.paparazziuav.org/wiki/
 Released version
 ----------------
 
-Currently, only the beta version 0.4 is released and can be downloaded from http://download.paparazziuav.org/android)
+Currently, only the beta version 0.5 is released and can be downloaded from http://download.paparazziuav.org/android)
 
 
 How to open in android studio

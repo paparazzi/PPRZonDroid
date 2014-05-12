@@ -24,7 +24,9 @@ android {
         debug {
             storeFile file ('key/debug.keystore')
         }
+
     }
+
 }
 
 dependencies {
