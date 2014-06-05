@@ -153,7 +153,7 @@ public class Telemetry {
   //Draw pfd for selected aircraft
   private void draw_pfd(int AcInd) {
 
-    muiGraphics.create_pfd2(AcPfd, Double.parseDouble(AircraftData[SelAcInd].Roll), Double.parseDouble(AircraftData[SelAcInd].Pitch), Double.parseDouble(AircraftData[SelAcInd].Heading), AircraftData[SelAcInd].Altitude, AircraftData[SelAcInd].Battery, AircraftData[SelAcInd].GpsMode, GraphicsScaleFactor);
+    muiGraphics.create_pfd2(AcPfd, Double.parseDouble(AircraftData[SelAcInd].Roll), Double.parseDouble(AircraftData[SelAcInd].Pitch), Double.parseDouble(AircraftData[SelAcInd].Heading), AircraftData[SelAcInd].Altitude, AircraftData[SelAcInd].Battery, AircraftData[SelAcInd].GpsMode,AircraftData[SelAcInd].AC_DlAlt, GraphicsScaleFactor);
 
   }
 
@@ -369,6 +369,39 @@ public class Telemetry {
     }//END OF  WAYPOINT_MOVED
 
 
+      //PARSE DL_VALUES MESSAGES
+      if (LastTelemetryString.matches("(^ground DL_VALUES .*)")) {
+
+          String[] ParsedData = LastTelemetryString.split(" ");
+          //Get AC  index
+          int AcIndex = get_indexof_ac(Integer.parseInt(ParsedData[2]));
+          check_ac_datas(AcIndex);
+
+          if (AcIndex >= 0) {
+
+              if (AircraftData[AcIndex].AC_AltID>0) {
+
+                  String[] DlData = ParsedData[3].split(",");
+
+                  if ( (DlData.length > AircraftData[AcIndex].AC_AltID) && (!"42".equals(DlData[AircraftData[AcIndex].AC_AltID]))  ) {
+                      //Log.d("PPRZ_info", "DLData Length >>" + DlData.length);
+                      AircraftData[AcIndex].AC_DlAlt= DlData[AircraftData[AcIndex].AC_AltID];
+                      AircraftData[AcIndex].AC_DlAlt= AircraftData[AcIndex].AC_DlAlt.substring(0, AircraftData[AcIndex].AC_DlAlt.indexOf((".")));
+                      //ParsedData[7].substring(0, (ParsedData[7].indexOf(".") + 2));
+                  }
+
+              }
+
+              return;
+          } else {
+              if (DEBUG) Log.d("PPRZ_info", "DL_VALUES can't be parsed!");
+              return;
+          }
+
+
+      }//END OF DL_VALUES
+
+
   } //End of parse_udp_string
 
   /**
@@ -378,6 +411,7 @@ public class Telemetry {
    */
   public void parse_tcp_string(String LastTelemetryString) {
 
+      Log.d("PPRZ_info", "Incoming str!" + LastTelemetryString);
     //Parse app server data
     int AcIndex;
 
@@ -396,6 +430,7 @@ public class Telemetry {
         AircraftData[AcIndex].AC_Color = ParsedData[5];
         AircraftData[AcIndex].AC_LaunchID = ParsedData[6];
         AircraftData[AcIndex].AC_KillID = ParsedData[7];
+        AircraftData[AcIndex].AC_AltID = Integer.parseInt(ParsedData[8]);
 
         AircraftData[AcIndex].AC_Logo = muiGraphics.create_ac_icon(AircraftData[AcIndex].AC_Type, AircraftData[AcIndex].AC_Color, GraphicsScaleFactor, (AcIndex == SelAcInd));
         AircraftData[AcIndex].AC_Carrot_Logo = muiGraphics.create_ac_carrot(AircraftData[AcIndex].AC_Color, GraphicsScaleFactor);
@@ -644,6 +679,8 @@ public class Telemetry {
     String AC_Type;
     String AC_LaunchID;
     String AC_KillID;
+    int AC_AltID;
+    String AC_DlAlt;
     Marker AC_Marker;
     Bitmap AC_Logo;
     Bitmap AC_Carrot_Logo;

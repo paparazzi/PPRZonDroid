@@ -1,7 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:orientation="vertical" android:layout_width="fill_parent"
     android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <NumberPicker
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/numberPickerThus"
+            />
+
+        <NumberPicker
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/numberPickerHuns" />
+
+        <NumberPicker
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/numberPickerTens" />
+
+        <NumberPicker
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/numberPickerOnes" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="240dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <View
+            android:layout_width="240dp"
+            android:layout_height="1dp"
+            android:layout_marginBottom="1dp"
+            android:layout_alignParentBottom="true"
+            android:background="#DADADC"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"></View>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Reset altitude to:"
+            android:id="@+id/textView" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal">
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:text="Desired Alt."
+                android:id="@+id/buttonResToDlAlt" />
+
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:text="AC Alt."
+                android:id="@+id/buttonResToAcAlt" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="240dp"
+            android:layout_height="1dp"
+            android:layout_marginBottom="1dp"
+            android:layout_alignParentBottom="true"
+            android:background="#DADADC"
+            android:layout_gravity="center_horizontal"></View>
+
+        <Button
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:text="Confirm"
+            android:id="@+id/buttonConfAlt"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp" />
+    </LinearLayout>
 
 </LinearLayout>

@@ -57,6 +57,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -97,6 +98,9 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   boolean AcLocked = false;
   TextView DialogTextWpName;
   Button DialogButtonConfirm;
+  Button Alt_DialogButtonConfirm;
+  Button Alt_ResToDlAlt;
+  Button Alt_ResToDesAlt;
   EditText DialogWpAltitude;
   TextView DialogTextWpLat;
   TextView DialogTextWpLon;
@@ -138,6 +142,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   private DrawerLayout mDrawerLayout;
   //Dialog components
   private Dialog WpDialog;
+  private Dialog AltDialog;
   //Position descriptions >> in future this needs to be an array or struct
   private LatLng AC_Pos = new LatLng(43.563958, 1.481391);
   private String SendStringBuf;
@@ -161,6 +166,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     BlList = new ArrayList<BlockModel>();
     return BlList;
   }
+
+  private NumberPicker mNumberPickerThus,mNumberPickerHuns, mNumberPickerTens,mNumberPickerOnes;
 
   /**
    * Setup TCP and UDP connections of Telemetry class
@@ -205,6 +212,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     /* Setup waypoint dialog */
     WpDialog = new Dialog(this);
     WpDialog.setContentView(R.layout.wp_modified);
+
     DialogTextWpName = (TextView) WpDialog.findViewById(R.id.textViewWpName);
     DialogButtonConfirm = (Button) WpDialog.findViewById(R.id.buttonConfirm);
     DialogWpAltitude = (EditText) WpDialog.findViewById(R.id.editTextAltitude);
@@ -240,9 +248,73 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       }
     });
 
+    /* Setup altitude dialog */
+    AltDialog = new Dialog(this);
+    AltDialog.setContentView(R.layout.alt_modified);
+
+    Alt_DialogButtonConfirm= (Button) AltDialog.findViewById(R.id.buttonConfAlt);
+
+      Alt_DialogButtonConfirm.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+
+              String DlAlt ="";
+
+              DlAlt= DlAlt + mNumberPickerThus.getValue();
+              DlAlt= DlAlt + mNumberPickerHuns.getValue();
+              DlAlt= DlAlt + mNumberPickerTens.getValue();
+              DlAlt= DlAlt + mNumberPickerOnes.getValue();
+              SendStringBuf = "dl DL_SETTING " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Id + " " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_AltID +  " " + DlAlt;
+              Log.d("PPRZ_info", SendStringBuf );
+              send_to_server(SendStringBuf, true);
+
+              AltDialog.dismiss();
+          }
+      });
+
+    Alt_ResToDlAlt =  (Button) AltDialog.findViewById(R.id.buttonResToDlAlt);
+      Alt_ResToDlAlt.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+
+             fill_alt(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_DlAlt);
+
+          }
+      });
+
+
+    Alt_ResToDesAlt =  (Button) AltDialog.findViewById(R.id.buttonResToAcAlt);
+      Alt_ResToDesAlt.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+
+              fill_alt(AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude);
+
+          }
+      });
+
+    mNumberPickerThus = (NumberPicker) AltDialog.findViewById(R.id.numberPickerThus);
+    mNumberPickerThus.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+    mNumberPickerThus.setMinValue(0);
+    mNumberPickerThus.setMaxValue(9);
+
+    mNumberPickerHuns = (NumberPicker) AltDialog.findViewById(R.id.numberPickerHuns);
+    mNumberPickerHuns.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+    mNumberPickerHuns.setMinValue(0);
+    mNumberPickerHuns.setMaxValue(9);
+
+    mNumberPickerTens = (NumberPicker) AltDialog.findViewById(R.id.numberPickerTens);
+    mNumberPickerTens.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+    mNumberPickerTens.setMinValue(0);
+    mNumberPickerTens.setMaxValue(9);
+
+    mNumberPickerOnes = (NumberPicker) AltDialog.findViewById(R.id.numberPickerOnes);
+    mNumberPickerOnes.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+    mNumberPickerOnes.setMinValue(0);
+    mNumberPickerOnes.setMaxValue(9);
+
     //Setup left drawer
     mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-
 
     //Setup AC List
     setup_ac_list();
@@ -307,10 +379,6 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
               BL_CountDown.start();
               mBlListAdapter.notifyDataSetChanged();
 
-
-              //TextView myDEbt = (TextView) view.findViewById(R.id.bl_name_clicked);
-              //myDEbt.setText("huloo");
-              //ClickedView = new View(getApplicationContext());
 
           }
       });
@@ -1289,6 +1357,72 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   }
 
+  public void show_alt_dialog(View mView) {
+        //Will camera trace aircraft
+        //AcLocked = LockToAcSwitch.isChecked();
+        //mDrawerLayout.closeDrawers();
+      // set dialog components
+      if (AC_DATA.SelAcInd < 0) {
+          Toast.makeText(getApplicationContext(), "No AC data yet!", Toast.LENGTH_SHORT).show();
+          return;
+      }
+
+
+      fill_alt(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_DlAlt);
+      AltDialog.setTitle("Set Altitude");
+
+
+      AltDialog.show();
+
+  }
+
+  public void fill_alt(String AltStr){
+
+      //Clean AltStr
+      if (AltStr.contains(" ")) {
+          AltStr=AltStr.substring(0,AltStr.indexOf(" "));
+      }
+
+      if (AltStr.length() >=4 ) {
+          mNumberPickerThus.setValue(Integer.parseInt(AltStr.substring(0,1)));
+          mNumberPickerHuns.setValue(Integer.parseInt(AltStr.substring(1,2)));
+          mNumberPickerTens.setValue(Integer.parseInt(AltStr.substring(2,3)));
+          mNumberPickerOnes.setValue(Integer.parseInt(AltStr.substring(3,4)));
+          return;
+      }
+      else {
+          mNumberPickerThus.setValue(0);
+      }
+
+      if (AltStr.length() >=3 ) {
+          mNumberPickerHuns.setValue(Integer.parseInt(AltStr.substring(0,1)));
+          mNumberPickerTens.setValue(Integer.parseInt(AltStr.substring(1,2)));
+          mNumberPickerOnes.setValue(Integer.parseInt(AltStr.substring(2,3)));
+          return;
+      }
+      else {
+          mNumberPickerHuns.setValue(0);
+      }
+
+      if (AltStr.length() >=2 ) {
+          mNumberPickerTens.setValue(Integer.parseInt(AltStr.substring(0,1)));
+          mNumberPickerOnes.setValue(Integer.parseInt(AltStr.substring(1,2)));
+          return;
+      }
+      else {
+          mNumberPickerTens.setValue(0);
+      }
+
+      if (AltStr.length() >=1 ) {
+          mNumberPickerOnes.setValue(Integer.parseInt(AltStr.substring(0,1)));
+          return;
+      }
+      else {
+          mNumberPickerOnes.setValue(0);
+      }
+
+  }
+
   /**
    * background thread to read & write comm strings. Only changed UI items should be refreshed for smoother UI
    * Check telemetry class for whole UI change flags
@@ -1392,22 +1526,18 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
         if (AC_DATA.BlockChanged) {
           //Block changed for selected aircraft
-            if (DEBUG) Log.d("PPRZ_info", "Block Changed for selected AC.");
+          if (DEBUG) Log.d("PPRZ_info", "Block Changed for selected AC.");
 
           set_selected_block((AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock-1),true);
-
-          //mBlListAdapter.SelectedInd = AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock;
-          //mBlListAdapter.notifyDataSetChanged();
           AC_DATA.BlockChanged = false;
+
         }
 
 
         if (AC_DATA.NewAcAdded) {
           //new ac addedBattery value for an ac is changed
-          //refresh_ac_list();
 
           set_selected_ac(AC_DATA.SelAcInd,false);
-          //AC_DATA.BatteryChanged = false;
           AC_DATA.NewAcAdded = false;
         }
 
@@ -1415,9 +1545,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
               //new ac addedBattery value for an ac is changed
               refresh_ac_list();
               mAcListAdapter.notifyDataSetChanged();
-              //set_selected_ac(AC_DATA.SelAcInd,false);
               AC_DATA.BatteryChanged = false;
-              //AC_DATA.NewAcAdded = false;
           }
 
         //For a smooth gui we need refresh only changed gui controls

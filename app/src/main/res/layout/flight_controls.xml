@@ -14,31 +14,39 @@
         android:adjustViewBounds="true" />
 
     <ImageButton
-        android:layout_width="75dp"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
         android:id="@+id/imageLaunch"
         android:src="@drawable/launch"
         android:layout_below="@+id/imageView_Pfd"
         android:onClick="launch_ac" />
 
     <ImageButton
-        android:layout_width="75dp"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
         android:id="@+id/imageResurrect"
         android:layout_alignBottom="@+id/imageLaunch"
         android:src="@drawable/resurrect"
-        android:layout_alignRight="@+id/imageView_Pfd"
-        android:onClick="resurrect_ac" />
+        android:onClick="resurrect_ac"
+        android:layout_toLeftOf="@+id/imageAlt" />
 
     <ImageButton
-        android:layout_width="75dp"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
         android:id="@+id/imageKill"
         android:layout_alignBottom="@+id/imageLaunch"
         android:src="@drawable/kill"
         android:layout_toRightOf="@+id/imageLaunch"
-        android:layout_toLeftOf="@+id/imageResurrect"
         android:onClick="kill_ac" />
+
+    <ImageButton
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:id="@+id/imageAlt"
+        android:layout_alignBottom="@+id/imageLaunch"
+        android:src="@drawable/set_alt"
+        android:onClick="show_alt_dialog"
+        android:layout_alignRight="@+id/imageView_Pfd" />
 
     <!-- title -->
     <View

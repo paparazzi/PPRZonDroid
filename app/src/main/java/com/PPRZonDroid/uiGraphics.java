@@ -60,7 +60,7 @@ public class uiGraphics {
   private int width;
   private Integer height;
   private String altitude = "";
-  private String remainBatt = "";
+  private String DesAlt = "";
   private String battVolt = "";
   private String gpsFix = "";
 
@@ -416,7 +416,7 @@ public class uiGraphics {
     return bmp;
   }
 
-  public void create_pfd2(Bitmap PfdBit, double rollx, double pitchx, double yawx, String alt, String bat, String GpsStat, float GraphicsScaleFactor) {
+  public void create_pfd2(Bitmap PfdBit, double rollx, double pitchx, double yawx, String alt, String bat, String GpsStat, String DesAltx, float GraphicsScaleFactor) {
 
     width = (int) (240 * GraphicsScaleFactor);
     height = (int) (140 * GraphicsScaleFactor);
@@ -424,6 +424,7 @@ public class uiGraphics {
     roll = rollx;
     pitch = pitchx;
     yaw = yawx;
+    DesAlt="Desired:" + DesAltx+" m";
     altitude = alt;
     battVolt = bat + "v";
     gpsFix = GpsStat;
@@ -481,7 +482,7 @@ public class uiGraphics {
     drawPitch(canvas);
     canvas.restore();
     canvas.save();
-    drawRoll(canvas);
+    drawRoll(canvas, GraphicsScaleFactor);
     canvas.restore();
     canvas.save();
     drawYaw(canvas);
@@ -490,19 +491,19 @@ public class uiGraphics {
     drawText(canvas);
     canvas.restore();
     canvas.save();
-    drawPlane(canvas);
+    drawPlane(canvas, GraphicsScaleFactor);
     canvas.restore();
 
    // return bmp;
 
   }
 
-  private void drawPlane(Canvas canvas) {
-    canvas.drawCircle(0, 0, 15, plane);
+  private void drawPlane(Canvas canvas,float GraphicsScaleFactor ) {
+    canvas.drawCircle(0, 0, (8*GraphicsScaleFactor), plane);
 
-    canvas.drawLine(-15, 0, -25, 0, plane);
-    canvas.drawLine(15, 0, 25, 0, plane);
-    canvas.drawLine(0, -15, 0, -25, plane);
+    canvas.drawLine((-8*GraphicsScaleFactor), 0, (-16*GraphicsScaleFactor), 0, plane);
+    canvas.drawLine((8*GraphicsScaleFactor), 0, (16*GraphicsScaleFactor) , 0, plane);
+    canvas.drawLine(0, (-8*GraphicsScaleFactor), 0, (-16*GraphicsScaleFactor), plane);
 
   }
 
@@ -517,10 +518,8 @@ public class uiGraphics {
       canvas.drawText(text,
               (float) (-width / 2.0 + bounds.height() * .2f), y, p);
     else
-      canvas.drawText(
-              text,
-              (float) (width / 2.0 - bounds.width() - bounds.height() * .2f),
-              y, p);
+      canvas.drawText(text,
+              (float) (width / 2.0 - bounds.width() - bounds.height() * .2f), y, p);
 
   }
 
@@ -528,8 +527,8 @@ public class uiGraphics {
     drawText(canvas, 1, gpsFix, statusText, true);
     drawText(canvas, 0, altitude, statusText, true);
 
-    //drawText(canvas, 1, remainBatt, statusText, false);
-    drawText(canvas, 0, battVolt, statusText, false);
+    drawText(canvas, 1, battVolt, statusText, false);
+    drawText(canvas, 0, DesAlt, statusText, false);
 
   }
 
@@ -578,7 +577,7 @@ public class uiGraphics {
 
   }
 
-  private void drawRoll(Canvas canvas) {
+  private void drawRoll(Canvas canvas, float GraphicsScaleFactor) {
 
     int r = (int) ((double) width * 0.35); // 250;
     RectF rec = new RectF(-r, -height / 2 + 60, r, -height / 2 + 60 + 2 * r);
@@ -609,7 +608,7 @@ public class uiGraphics {
 
     float dx = (float) Math.sin(-roll * Math.PI / 180) * r;
     float dy = (float) Math.cos(-roll * Math.PI / 180) * r;
-    canvas.drawCircle(dx, centerY - dy, 10, redSolid);
+    canvas.drawCircle(dx, centerY - dy, (5*GraphicsScaleFactor) , redSolid);
 
   }
 
