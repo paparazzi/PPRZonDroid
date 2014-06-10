@@ -15,6 +15,12 @@
         android:summary="@string/pref_use_device_gps_title_description"
         android:defaultValue="false" />
 
+        <CheckBoxPreference
+            android:key="disable_screen_dim"
+            android:title="@string/pref_screen_dim_title"
+            android:summary="@string/pref_screen_dim_description"
+            android:defaultValue="true" />
+
         <EditTextPreference
             android:key="block_change_timeout"
             android:title="@string/pref_bltimeout_title"

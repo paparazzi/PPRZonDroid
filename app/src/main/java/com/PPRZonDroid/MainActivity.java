@@ -47,6 +47,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
@@ -93,6 +94,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   public static final String USE_GPS = "use_gps_checkbox";
   public static final String Control_Pass = "app_password";
   public static final String BLOCK_C_TIMEOUT = "block_change_timeout";
+  public static final String DISABLE_SCREEN_DIM = "disable_screen_dim";
 
   public Telemetry AC_DATA;                       //Class to hold&proces AC Telemetry Data
   boolean AcLocked = false;
@@ -152,6 +154,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   //Background task to read and write telemery msgs
   private boolean isTaskRunning;
 
+  private boolean DisableScreenDim;
+
   private CountDownTimer BL_CountDown;
   private int BL_CountDownTimerValue;
   private int JumpToBlock;
@@ -166,6 +170,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     BlList = new ArrayList<BlockModel>();
     return BlList;
   }
+
+  private Thread mTCPthread;
 
   private NumberPicker mNumberPickerThus,mNumberPickerHuns, mNumberPickerTens,mNumberPickerOnes;
 
@@ -187,8 +193,8 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     AC_DATA.GraphicsScaleFactor = getResources().getDisplayMetrics().density;
     AC_DATA.prepare_class();
 
-    AC_DATA.tcp_connection();
-    AC_DATA.mTcpClient.setup_tcp();
+    //AC_DATA.tcp_connection();
+    //AC_DATA.mTcpClient.setup_tcp();
     AC_DATA.setup_udp();
   }
 
@@ -208,6 +214,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
     AppPassword = (AppSettings.getString("app_password", ""));
 
+    DisableScreenDim = AppSettings.getBoolean("disable_screen_dim", true);
 
     /* Setup waypoint dialog */
     WpDialog = new Dialog(this);
@@ -1000,13 +1007,20 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
     // We need an Editor object to make preference changes.
     // All objects are from android.context.Context
+
     SharedPreferences.Editor editor = AppSettings.edit();
 
     editor.putFloat("MapZoomLevel", MapZoomLevel);
 
     // Commit the edits!
     editor.commit();
-      send_to_server("removeme",false);
+    AC_DATA.mTcpClient.sendMessage("removeme");
+    //TelemetryAsyncTask.isCancelled();
+    //AC_DATA.mTcpClient.stopClient();
+    isTaskRunning= false;
+    //TelemetryAsyncTask.cancel(true);
+
+    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
   }
 
@@ -1015,15 +1029,18 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         super.onRestart();
 
         //Force to reconnect
-        TcpSettingsChanged = true;
+        //TcpSettingsChanged = true;
+        TelemetryAsyncTask = new ReadTelemetry();
+        TelemetryAsyncTask.execute();
 
+        if (DisableScreenDim) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
+        //enable screen dim
 
 
     }
@@ -1063,13 +1080,19 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
     setContentView(R.layout.activity_main);
 
+
+
     set_up_app();
+
+    if (DisableScreenDim) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+
     setup_telemetry_class();
-    new ReadTelemetry().execute();
-
-
+    TelemetryAsyncTask = new ReadTelemetry();
+    TelemetryAsyncTask.execute();
   }
 
+  private ReadTelemetry TelemetryAsyncTask;
 
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 * START OF UI FUNCTIONS >>>>>> START OF UI FUNCTIONS >>>>>> START OF UI FUNCTIONS >>>>>> START OF UI FUNCTIONS >>>>>>
@@ -1119,11 +1142,20 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       if (DEBUG) Log.d("PPRZ_info", "App_password changed : " + AppSettings.getString(Control_Pass , ""));
     }
 
-      if (key.equals(BLOCK_C_TIMEOUT)) {
-          BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString(BLOCK_C_TIMEOUT, "3"))*1000;
-          setup_counter();
-          if (DEBUG) Log.d("PPRZ_info", "Clock change timeout changed : " + AppSettings.getString(BLOCK_C_TIMEOUT , ""));
-      }
+    if (key.equals(BLOCK_C_TIMEOUT)) {
+      BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString(BLOCK_C_TIMEOUT, "3"))*1000;
+      setup_counter();
+      if (DEBUG) Log.d("PPRZ_info", "Clock change timeout changed : " + AppSettings.getString(BLOCK_C_TIMEOUT , ""));
+    }
+
+    if (key.equals(DISABLE_SCREEN_DIM)) {
+      DisableScreenDim = AppSettings.getBoolean(DISABLE_SCREEN_DIM, true);
+
+      if (DisableScreenDim) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+      else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+      if (DEBUG) Log.d("PPRZ_info", "Screen dim settings changed : " + DisableScreenDim);
+    }
 
   }
 
@@ -1201,6 +1233,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   public void launch_ac(View mView) {
 
     if (AC_DATA.SelAcInd >= 0) {
+
       send_to_server("dl DL_SETTING " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Id + " " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_LaunchID + " 1.000000", true);
       //dl DL_SETTING 5 8 1.000000
     } else {
@@ -1440,22 +1473,41 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     @Override
     protected String doInBackground(String... strings) {
 
-      String TcpReceived;
+        mTCPthread =  new Thread(new ClientThread());
+        mTCPthread.start();
 
-      while (isTaskRunning) {
+        while (isTaskRunning) {
 
-        //1 check if any string waiting to be send to tcp
-        if (!(null == AC_DATA.SendToTcp)) {
-          AC_DATA.mTcpClient.sendMessage(AC_DATA.SendToTcp);
-          AC_DATA.SendToTcp = null;
-        }
+            //Check if settings changed
+            if (TcpSettingsChanged) {
+                AC_DATA.mTcpClient.stopClient();
+                try {
+                    Thread.sleep(200);
+                    //AC_DATA.mTcpClient.SERVERIP= AC_DATA.ServerIp;
+                    //AC_DATA.mTcpClient.SERVERPORT= AC_DATA.ServerTcpPort;
+                    mTCPthread =  new Thread(new ClientThread());
+                    mTCPthread.start();
+                    TcpSettingsChanged=false;
+                    if (DEBUG) Log.d("PPRZ_info", "TcpSettingsChanged applied");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
 
-        TcpReceived = AC_DATA.mTcpClient.readMessage();
+            if (UdpSettingsChanged) {
+                AC_DATA.setup_udp();
+                //AC_DATA.tcp_connection();
+                UdpSettingsChanged = false;
+                if (DEBUG) Log.d("PPRZ_info", "UdpSettingsChanged applied");
+            }
 
-        //2 check if any tcp string waiting to be parsed
-        if (!(null == TcpReceived)) {
-          AC_DATA.parse_tcp_string(TcpReceived);
-        }
+            // Log.e("PPRZ_info", "3");
+            //1 check if any string waiting to be send to tcp
+            if (!(null == AC_DATA.SendToTcp)) {
+                AC_DATA.mTcpClient.sendMessage(AC_DATA.SendToTcp);
+                AC_DATA.SendToTcp = null;
+
+            }
 
         //3 try to read & parse udp data
         AC_DATA.read_udp_data();
@@ -1466,15 +1518,12 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
           AC_DATA.ViewChanged = false;
         }
 
-        //Check if settings changed
-        if (TcpSettingsChanged || UdpSettingsChanged) {
-          publishProgress("ee");
-        }
+
 
 
       }
 
-      if (DEBUG) Log.d("PPRZ_info", "doInBackground exiting");
+      if (DEBUG) Log.d("PPRZ_info", "Stopping AsyncTask ..");
       return null;
     }
 
@@ -1485,19 +1534,6 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       try {
 
 
-        if (TcpSettingsChanged) {
-          AC_DATA.tcp_connection();
-          AC_DATA.mTcpClient.setup_tcp();
-          TcpSettingsChanged = false;
-          if (DEBUG) Log.d("PPRZ_info", "TcpSettingsChanged applied");
-        }
-
-        if (UdpSettingsChanged) {
-          AC_DATA.setup_udp();
-          AC_DATA.tcp_connection();
-          UdpSettingsChanged = false;
-          if (DEBUG) Log.d("PPRZ_info", "UdpSettingsChanged applied");
-        }
 
         if (AC_DATA.SelAcInd < 0) {
           //no selected aircrafts yet! Return.
@@ -1587,11 +1623,37 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     @Override
     protected void onPostExecute(String s) {
       super.onPostExecute(s);
-      if (DEBUG) Log.d("PPRZ_info", "onPostExecute");
+
     }
 
   }
 
+  class ClientThread implements Runnable {
+
+
+        @Override
+        public void run() {
+
+            Log.d("PPRZ_info", "ClientThread started");
+
+            AC_DATA.mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
+                @Override
+                //here the messageReceived method is implemented
+                public void messageReceived(String message) {
+                    //this method calls the onProgressUpdate
+                    //publishProgress(message);
+                    //AC_DATA.parse_tcp_string(message);
+                    AC_DATA.parse_tcp_string(message);
+
+                }
+            });
+            AC_DATA.mTcpClient.SERVERIP = AC_DATA.ServerIp;
+            AC_DATA.mTcpClient.SERVERPORT= AC_DATA.ServerTcpPort;
+            AC_DATA.mTcpClient.run();
+
+        }
+
+    }
 
 
 

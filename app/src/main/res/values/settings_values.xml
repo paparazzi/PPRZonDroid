@@ -9,6 +9,9 @@
     <string name="pref_use_device_gps_title">Use My Location</string>
     <string name="pref_use_device_gps_title_description">Shows your location on map using device GPS.</string>
 
+    <string name="pref_screen_dim_title">Disable Screen Dim.</string>
+    <string name="pref_screen_dim_description">Disables screen dimming when app is running.</string>
+
     <string name="pref_bltimeout_title">Block Change Timeout(sec)</string>
     <string name="pref_bltimeout_description">Time pass before change block command.</string>
     <string name="pref_default_bltimeout">3</string>

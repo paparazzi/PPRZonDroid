@@ -81,14 +81,14 @@ public class Telemetry {
 
   /**
    * Prepares tcp connection
-   */
+
   public void tcp_connection() {
     mTcpClient = new TCPClient();
     mTcpClient.DEBUG= DEBUG;
 
     mTcpClient.SERVERIP = ServerIp;
     mTcpClient.SERVERPORT = ServerTcpPort;
-  }
+  }*/
 
   /**
    * Prepare Aircraft class to prevent null point exceptions at app starts
@@ -120,35 +120,26 @@ public class Telemetry {
 
   public void read_udp_data() {
 
-    try {
+        try {
 
-      socket.receive(packet);
+            socket.receive(packet);
 
-      //Log.d("PPRZ_info", "inp2");
+            String2parse=  new String(packet.getData(), packet.getOffset(), packet.getLength()-1);
 
-      //String2parse= (String) (packet.getData(), 0, packet.getLength());
-      String2parse = string_from_datagrampacket(packet);
-      //Log.d("PPRZ_info", "inp3");
-      if ((String2parse != null) && (!String2parse.equals(String2parse_buf))) {
-        String2parse_buf = String2parse;
-        parse_udp_string(String2parse);
-      }
+            if ((String2parse != null) && (!String2parse.equals(String2parse_buf))) {
+                String2parse_buf = String2parse;
+                //if (DEBUG) Log.d("PPRZ_exception", "Udp Package Received:" + String2parse);
+                parse_udp_string(String2parse);
+                String2parse=null;
+            }
 
 
-    } catch (Exception e) {
-        //ignore java.net.SocketTimeoutException
-        //if (DEBUG) Log.d("PPRZ_exception", "Error#3 .. Udp Package Read Error:" + e.toString());
+        } catch (Exception e) {
+            //ignore java.net.SocketTimeoutException
+            //if (DEBUG) Log.d("PPRZ_exception", "Error#3 .. Udp Package Read Error:" + e.toString());
+        }
+
     }
-
-  }
-
-  /**
-  * Converts a given datagram packet's contents to a String.
-  */
-  static String string_from_datagrampacket(DatagramPacket packet) {
-
-     return new String(packet.getData(), 0, packet.getLength());
-  }
 
   //Draw pfd for selected aircraft
   private void draw_pfd(int AcInd) {
@@ -411,7 +402,7 @@ public class Telemetry {
    */
   public void parse_tcp_string(String LastTelemetryString) {
 
-      Log.d("PPRZ_info", "Incoming str!" + LastTelemetryString);
+    //Log.d("PPRZ_info", "Incoming str!" + LastTelemetryString);
     //Parse app server data
     int AcIndex;
 
