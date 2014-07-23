@@ -124,7 +124,9 @@ public class Telemetry {
 
             socket.receive(packet);
 
-            String2parse=  new String(packet.getData(), packet.getOffset(), packet.getLength()-1);
+            String2parse=  new String(packet.getData(), packet.getOffset(), packet.getLength());
+            //!!TODO line below is for compatibility. Will be
+            //String2parse=  new String(packet.getData(), packet.getOffset(), packet.getLength()-1);
 
             if ((String2parse != null) && (!String2parse.equals(String2parse_buf))) {
                 String2parse_buf = String2parse;
