@@ -25,6 +25,7 @@
  */
 package com.PPRZonDroid;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -50,6 +51,7 @@ public class SettingsActivity extends Activity {
 
 }
 
+@SuppressLint("ValidFragment")
 class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
   public static final String USE_GPS = "use_gps_checkbox";

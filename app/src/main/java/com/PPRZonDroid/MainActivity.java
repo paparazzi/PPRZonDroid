@@ -84,7 +84,7 @@ import static java.lang.Double.parseDouble;
 public class MainActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
   //TODO ! FLAG MUST BE 'FALSE' FOR PLAY STORE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  boolean DEBUG=true;
+  boolean DEBUG=false;
 
   //Application Settings
   public static final String SERVER_IP_ADDRESS = "server_ip_adress_text";
@@ -272,7 +272,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
               DlAlt= DlAlt + mNumberPickerTens.getValue();
               DlAlt= DlAlt + mNumberPickerOnes.getValue();
               SendStringBuf = "dl DL_SETTING " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Id + " " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_AltID +  " " + DlAlt;
-              Log.d("PPRZ_info", SendStringBuf );
+              //Log.d("PPRZ_info", SendStringBuf );
               send_to_server(SendStringBuf, true);
 
               AltDialog.dismiss();
@@ -1634,7 +1634,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         @Override
         public void run() {
 
-            Log.d("PPRZ_info", "ClientThread started");
+            if (DEBUG) Log.d("PPRZ_info", "ClientThread started");
 
             AC_DATA.mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
                 @Override
