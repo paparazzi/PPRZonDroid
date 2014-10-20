@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Clicked block item cancel button background creator -->
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#e43700"></solid>
+    <corners android:radius="18dp"></corners>
+    <stroke  android:width="2dp" android:color="#b12b00"></stroke>
+</shape>

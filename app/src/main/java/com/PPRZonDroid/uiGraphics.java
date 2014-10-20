@@ -37,11 +37,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 
-/**
- * Created by pprz on 1/28/14.
- */
-
-
 public class uiGraphics {
 
 
@@ -65,7 +60,7 @@ public class uiGraphics {
   private int width;
   private Integer height;
   private String altitude = "";
-  private String remainBatt = "";
+  private String DesAlt = "";
   private String battVolt = "";
   private String gpsFix = "";
 
@@ -116,14 +111,14 @@ public class uiGraphics {
    * Create AC carrot
    *
    * @param AcColor
-   * @param SizeFactor
+   * @param GraphicsScaleFactor
    * @return
    */
-  public Bitmap create_ac_carrot(String AcColor, float SizeFactor) {
+  public Bitmap create_ac_carrot(String AcColor, float GraphicsScaleFactor) {
 
 
-    int w = (int) (15 * SizeFactor);
-    int h = (int) (10 * SizeFactor);
+    int w = (int) (15 * GraphicsScaleFactor);
+    int h = (int) (10 * GraphicsScaleFactor);
     Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
     Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
     Canvas canvas = new Canvas(bmp);
@@ -162,12 +157,12 @@ public class uiGraphics {
     return bmp;
   }
 
-  private Canvas create_selected_canvas(Canvas CanvIn, int AcColor, float SizeFactor) {
+  private Canvas create_selected_canvas(Canvas CanvIn, int AcColor, float GraphicsScaleFactor) {
 
     int w = CanvIn.getWidth();
     int h = CanvIn.getHeight();
 
-    float SelLineLeng = 4 * SizeFactor;
+    float SelLineLeng = 4 * GraphicsScaleFactor;
 
     Path SelPath = new Path();
     SelPath.moveTo(0, 0); //1
@@ -192,7 +187,7 @@ public class uiGraphics {
     p.setColor(Color.YELLOW);
     p.setAntiAlias(true);
     p.setStyle(Paint.Style.STROKE);
-    p.setStrokeWidth(3 * SizeFactor);
+    p.setStrokeWidth(3 * GraphicsScaleFactor);
     CanvIn.drawPath(SelPath, p);
     return CanvIn;
   }
@@ -202,10 +197,10 @@ public class uiGraphics {
    *
    * @param AcType      AC Type (fixedwing,rotorcraft or flyingwing. default :fixedwing ...
    * @param AcColorStrX Ac Color
-   * @param SizeFactor  Logo Scale factor
+   * @param GraphicsScaleFactor  Logo Scale factor
    * @return Bitmap
    */
-  public Bitmap create_ac_icon(String AcType, String AcColorStrX, float SizeFactor, boolean AcSelected) {
+  public Bitmap create_ac_icon(String AcType, String AcColorStrX, float GraphicsScaleFactor, boolean AcSelected) {
 
     //validate color string
     int AcColor = get_color(AcColorStrX);
@@ -214,17 +209,17 @@ public class uiGraphics {
     if (AcType.equals("rotorcraft")) {
 
 
-      int w = (int) (34 * SizeFactor);
-      int h = (int) (34 * SizeFactor);
+      int w = (int) (34 * GraphicsScaleFactor);
+      int h = (int) (34 * GraphicsScaleFactor);
       Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
       Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
       Canvas canvas = new Canvas(bmp);
 
       if (AcSelected) {
-        canvas = create_selected_canvas(canvas, AcColor, SizeFactor);
+        canvas = create_selected_canvas(canvas, AcColor, GraphicsScaleFactor);
       }
 
-      //Create flyingwing logo
+      //Create rotorcraft logo
       Paint p = new Paint();
 
       p.setColor(AcColor);
@@ -248,10 +243,6 @@ public class uiGraphics {
       ACpath.lineTo((10 * w / 16), (5 * h / 16));
       ACpath.lineTo((w / 2), (5 * h / 16));
 
-      //ACpath.lineTo((w/8),(7*h/8));
-      //ACpath.close();
-      //border
-
       canvas.drawPath(ACpath, p);
 
       Paint black = new Paint();
@@ -266,15 +257,15 @@ public class uiGraphics {
       return bmp;
     } else if (AcType.equals("flyingwing")) {
 
-      int w = (int) (30 * SizeFactor);
-      int h = (int) (15 * SizeFactor);
+      int w = (int) (30 * GraphicsScaleFactor);
+      int h = (int) (15 * GraphicsScaleFactor);
       Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
       Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
       Canvas canvas = new Canvas(bmp);
 
 
       if (AcSelected) {
-        canvas = create_selected_canvas(canvas, AcColor, SizeFactor);
+        canvas = create_selected_canvas(canvas, AcColor, GraphicsScaleFactor);
       }
 
       //Create flyingwing logo
@@ -311,14 +302,14 @@ public class uiGraphics {
     } else {
 
       //Create fixedwing logo
-      int w = (int) (28 * SizeFactor);
-      int h = (int) (28 * SizeFactor);
+      int w = (int) (28 * GraphicsScaleFactor);
+      int h = (int) (28 * GraphicsScaleFactor);
       Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
       Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
       Canvas canvas = new Canvas(bmp);
 
       if (AcSelected) {
-        canvas = create_selected_canvas(canvas, AcColor, SizeFactor);
+        canvas = create_selected_canvas(canvas, AcColor, GraphicsScaleFactor);
       }
 
       Paint p = new Paint();
@@ -370,33 +361,28 @@ public class uiGraphics {
   }
 
   //Creates icons for markers
-  public Bitmap create_marker_icon(String AcColorX, String MarkerName, float SizeFactor) {
+  public Bitmap create_marker_icon(String AcColorX, String MarkerName, float GraphicsScaleFactor) {
 
 
-    int w = (int) (24 * SizeFactor);
-    int h = (int) (24 * SizeFactor);
+    int w = (int) (34 * GraphicsScaleFactor); //24
+    int h = (int) (54 * GraphicsScaleFactor);
     Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
     Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
     Canvas canvas = new Canvas(bmp);
 
-
-    //Create fixedwing logo
     Paint p = new Paint();
-
     p.setColor(get_color(AcColorX));
-
-
     p.setStyle(Paint.Style.FILL);
     p.setAntiAlias(true);
 
     Path MarkerPath = new Path();
-    MarkerPath.moveTo((w / 2), (h - 2));  //point 1
-    MarkerPath.lineTo((3 * w / 8), (6 * h / 8)); //point 2
-    MarkerPath.lineTo(2, (6 * h / 8));    //point 3
-    MarkerPath.lineTo(2, (3 * h / 8));    //point 4
-    MarkerPath.lineTo((h - 2), (3 * h / 8));   //point 5
-    MarkerPath.lineTo((h - 2), (6 * h / 8));   //point 6
-    MarkerPath.lineTo((5 * w / 8), (6 * h / 8)); //point 7
+    MarkerPath.moveTo((w / 2), (6*h/16));  //point 1
+    MarkerPath.lineTo((7*w/16), (5*h/16)); //point 2
+    MarkerPath.lineTo((2*w/8), (5*h/16));    //point 3
+    MarkerPath.lineTo((2*w/8), (2));    //point 4  (2*h/8)
+    MarkerPath.lineTo((6*w/8), (2));   //point 5
+    MarkerPath.lineTo((6*w/8), (5*h/16));   //point 6
+    MarkerPath.lineTo((9*w/16), (5*h/16)); //point 7
 
     MarkerPath.close();
 
@@ -412,30 +398,34 @@ public class uiGraphics {
     //Text
 
     black.setTextAlign(Paint.Align.CENTER);
-    black.setStrokeWidth(2.3f * SizeFactor);
-    black.setTextSize(7f * SizeFactor);
+    black.setStrokeWidth(3f * GraphicsScaleFactor);
+    black.setTextSize(8f * GraphicsScaleFactor);
+
+    //for DEBUG
+    //canvas.drawRect(0,0,w,h,black);
 
 
     p.setStyle(Paint.Style.STROKE);
     p.setTextAlign(Paint.Align.CENTER);
-    p.setTextSize(7f * SizeFactor);
-    p.setStrokeWidth(1f * SizeFactor);
+    p.setTextSize(8f * GraphicsScaleFactor);
+    p.setStrokeWidth(1f * GraphicsScaleFactor);
 
-    canvas.drawText(MarkerName, (w / 2), ((3 * h / 8) - 4), black);
-    canvas.drawText(MarkerName, (w / 2), ((3 * h / 8) - 4), p);
+    canvas.drawText(MarkerName, (w / 2),(7*h/32), black);
+    canvas.drawText(MarkerName, (w / 2),(7*h/32), p);
 
     return bmp;
   }
 
-  public Bitmap create_pfd2(double rollx, double pitchx, double yawx, String alt, String bat, String GpsStat, float SizeFactor) {
+  public void create_pfd2(Bitmap PfdBit, double rollx, double pitchx, double yawx, String alt, String bat, String GpsStat, String DesAltx, float GraphicsScaleFactor) {
 
-    width = (int) (240 * SizeFactor);
-    height = (int) (140 * SizeFactor);
+    width = (int) (240 * GraphicsScaleFactor);
+    height = (int) (140 * GraphicsScaleFactor);
 
     roll = rollx;
     pitch = pitchx;
     yaw = yawx;
-    altitude = alt + "m";
+    DesAlt="Desired:" + DesAltx+" m";
+    altitude = alt;
     battVolt = bat + "v";
     gpsFix = GpsStat;
 
@@ -455,16 +445,16 @@ public class uiGraphics {
     whitebar.setAntiAlias(true);
 
     white.setColor(Color.WHITE);
-    white.setTextSize(9.0f * SizeFactor);
+    white.setTextSize(9.0f * GraphicsScaleFactor);
     white.setAntiAlias(true);
 
     whiteCenter.setColor(Color.WHITE);
-    whiteCenter.setTextSize(9.0f * SizeFactor);
+    whiteCenter.setTextSize(9.0f * GraphicsScaleFactor);
     whiteCenter.setTextAlign(Paint.Align.CENTER);
     whiteCenter.setAntiAlias(true);
 
     statusText.setColor(Color.WHITE);
-    statusText.setTextSize(15.0f * SizeFactor);
+    statusText.setTextSize(15.0f * GraphicsScaleFactor);
     statusText.setAntiAlias(true);
 
     whiteStroke.setColor(Color.WHITE);
@@ -480,9 +470,8 @@ public class uiGraphics {
     redSolid.setColor(Color.RED);
     redSolid.setAntiAlias(true);
 
-    Bitmap.Config conf = Bitmap.Config.ARGB_4444; // see other conf types
-    Bitmap bmp = Bitmap.createBitmap(width, height, conf); // this creates a MUTABLE bitmapAircraftData[IndexOfAc].AC_Color
-    Canvas canvas = new Canvas(bmp);
+
+    Canvas canvas = new Canvas(PfdBit);
 
     // clear screen
     canvas.drawColor(Color.rgb(20, 20, 20));
@@ -493,7 +482,7 @@ public class uiGraphics {
     drawPitch(canvas);
     canvas.restore();
     canvas.save();
-    drawRoll(canvas);
+    drawRoll(canvas, GraphicsScaleFactor);
     canvas.restore();
     canvas.save();
     drawYaw(canvas);
@@ -502,19 +491,19 @@ public class uiGraphics {
     drawText(canvas);
     canvas.restore();
     canvas.save();
-    drawPlane(canvas);
+    drawPlane(canvas, GraphicsScaleFactor);
     canvas.restore();
 
-    return bmp;
+   // return bmp;
 
   }
 
-  private void drawPlane(Canvas canvas) {
-    canvas.drawCircle(0, 0, 15, plane);
+  private void drawPlane(Canvas canvas,float GraphicsScaleFactor ) {
+    canvas.drawCircle(0, 0, (8*GraphicsScaleFactor), plane);
 
-    canvas.drawLine(-15, 0, -25, 0, plane);
-    canvas.drawLine(15, 0, 25, 0, plane);
-    canvas.drawLine(0, -15, 0, -25, plane);
+    canvas.drawLine((-8*GraphicsScaleFactor), 0, (-16*GraphicsScaleFactor), 0, plane);
+    canvas.drawLine((8*GraphicsScaleFactor), 0, (16*GraphicsScaleFactor) , 0, plane);
+    canvas.drawLine(0, (-8*GraphicsScaleFactor), 0, (-16*GraphicsScaleFactor), plane);
 
   }
 
@@ -529,10 +518,8 @@ public class uiGraphics {
       canvas.drawText(text,
               (float) (-width / 2.0 + bounds.height() * .2f), y, p);
     else
-      canvas.drawText(
-              text,
-              (float) (width / 2.0 - bounds.width() - bounds.height() * .2f),
-              y, p);
+      canvas.drawText(text,
+              (float) (width / 2.0 - bounds.width() - bounds.height() * .2f), y, p);
 
   }
 
@@ -540,8 +527,8 @@ public class uiGraphics {
     drawText(canvas, 1, gpsFix, statusText, true);
     drawText(canvas, 0, altitude, statusText, true);
 
-    //drawText(canvas, 1, remainBatt, statusText, false);
-    drawText(canvas, 0, battVolt, statusText, false);
+    drawText(canvas, 1, battVolt, statusText, false);
+    drawText(canvas, 0, DesAlt, statusText, false);
 
   }
 
@@ -590,7 +577,7 @@ public class uiGraphics {
 
   }
 
-  private void drawRoll(Canvas canvas) {
+  private void drawRoll(Canvas canvas, float GraphicsScaleFactor) {
 
     int r = (int) ((double) width * 0.35); // 250;
     RectF rec = new RectF(-r, -height / 2 + 60, r, -height / 2 + 60 + 2 * r);
@@ -621,7 +608,7 @@ public class uiGraphics {
 
     float dx = (float) Math.sin(-roll * Math.PI / 180) * r;
     float dy = (float) Math.cos(-roll * Math.PI / 180) * r;
-    canvas.drawCircle(dx, centerY - dy, 10, redSolid);
+    canvas.drawCircle(dx, centerY - dy, (5*GraphicsScaleFactor) , redSolid);
 
   }
 

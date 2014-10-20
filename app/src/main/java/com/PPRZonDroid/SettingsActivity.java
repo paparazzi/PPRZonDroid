@@ -25,6 +25,7 @@
  */
 package com.PPRZonDroid;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -50,6 +51,7 @@ public class SettingsActivity extends Activity {
 
 }
 
+@SuppressLint("ValidFragment")
 class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
   public static final String USE_GPS = "use_gps_checkbox";
@@ -57,6 +59,7 @@ class SettingsFragment extends PreferenceFragment implements SharedPreferences.O
   public static final String SERVER_PORT_ADDRESS = "server_port_number_text";
   public static final String LOCAL_PORT_ADDRESS = "local_port_number_text";
   public static final String MIN_AIRSPEED = "minimum_air_speed";
+  public static final String BLOCK_C_TIMEOUT = "block_change_timeout";
 
 
   @Override
@@ -76,6 +79,9 @@ class SettingsFragment extends PreferenceFragment implements SharedPreferences.O
 
     Preference connectionPref4 = findPreference(MIN_AIRSPEED);
     connectionPref4.setSummary((PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(MIN_AIRSPEED, "")) + " m/s");
+
+    Preference connectionPref5 = findPreference(BLOCK_C_TIMEOUT);
+    connectionPref5.setSummary((PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(BLOCK_C_TIMEOUT, "")) + " sec");
   }
 
   @Override
@@ -105,14 +111,20 @@ class SettingsFragment extends PreferenceFragment implements SharedPreferences.O
       connectionPref.setSummary(sharedPreferences.getString(key, "") + " m/s");
     }
 
+    if (key.equals(BLOCK_C_TIMEOUT)) {
+        Preference connectionPref = findPreference(key);
+        //Set summary to be the user-description for the selected value
+        assert connectionPref != null;
+        connectionPref.setSummary(sharedPreferences.getString(key, "") + " sec");
+    }
+
     //Log.d("PPRZ_info", "Preference changed");
   }
 
   @Override
   public void onResume() {
     super.onResume();
-    getPreferenceScreen().getSharedPreferences()
-            .registerOnSharedPreferenceChangeListener(this);
+    getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
 
   }
 

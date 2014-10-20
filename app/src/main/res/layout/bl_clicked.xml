@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Template of clicked block item layout-->
+
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="4dp"
+    android:background="@drawable/rectangle">
+
+    <TextView
+        android:id="@+id/bl_name_clicked"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="block 1"
+        android:textIsSelectable="false"
+        android:clickable="false"
+        android:layout_marginTop="5dp"
+        android:textStyle="bold"
+        android:layout_marginBottom="5dp" />
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:padding="5dp">
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="36dp"
+            android:id="@+id/BLC_Progress"
+            android:progressDrawable="@drawable/greenprogress"
+            android:layout_alignLeft="@+id/BLC_Ok_Button"
+            android:layout_marginLeft="18dp"
+            android:layout_alignRight="@+id/BLC_Cancel_Button"
+            android:layout_marginRight="18dp" />
+
+        <ImageButton
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:id="@+id/BLC_Ok_Button"
+            android:src="@drawable/abc_ic_cab_done_holo_dark"
+            android:background="@drawable/ok_rectangle"
+            android:onClick="confirm_bl_change" />
+
+        <ImageButton
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:id="@+id/BLC_Cancel_Button"
+            android:src="@drawable/abc_ic_clear_normal"
+            android:background="@drawable/cancel_rectangle"
+            android:onClick="cancel_bl_change"
+            android:layout_gravity="right"
+            android:textAlignment="textEnd"
+            android:layout_alignParentRight="true" />
+    </RelativeLayout>
+
+</LinearLayout>

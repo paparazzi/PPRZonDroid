@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Clicked block item OK button background creator -->
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#5cba1d"></solid>
+    <corners android:radius="18dp"></corners>
+    <stroke  android:width="2dp" android:color="#4F6922"></stroke>
+</shape>

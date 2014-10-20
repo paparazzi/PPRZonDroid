@@ -22,13 +22,13 @@
 
 package com.PPRZonDroid;
 
-import android.app.Application;
 import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -36,8 +36,9 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-public class Telemetry extends Application {
+public class Telemetry {
 
+  boolean DEBUG;
   public String SendToTcp = null;
   public int SelAcInd = -1;  //
 
@@ -56,7 +57,6 @@ public class Telemetry extends Application {
   public boolean NewAcAdded;
   public boolean BlockChanged = false;
   public boolean ApStatusChanged = false;
-  public boolean AirspeedChanged = false;
 
   public Bitmap AcPfd;     //Pfd bitmap
   /*
@@ -77,22 +77,18 @@ public class Telemetry extends Application {
   private String String2parse_buf = "";
   private DatagramSocket socket = null;
 
-  /**
-   * Converts a given datagram packet's contents to a String.
-   */
-  static String string_from_datagrampacket(DatagramPacket packet) {
-    return new String(packet.getData(), 0, packet.getLength());
-  }
+
 
   /**
    * Prepares tcp connection
-   */
+
   public void tcp_connection() {
     mTcpClient = new TCPClient();
+    mTcpClient.DEBUG= DEBUG;
 
     mTcpClient.SERVERIP = ServerIp;
     mTcpClient.SERVERPORT = ServerTcpPort;
-  }
+  }*/
 
   /**
    * Prepare Aircraft class to prevent null point exceptions at app starts
@@ -101,6 +97,9 @@ public class Telemetry extends Application {
     //Initial creation
     AircraftData = new AirCraft[MaxNumbOfAC];
 
+    //Create & recycle bitmap to prevent dalvik allocating too much ram for it..
+    Bitmap.Config conf = Bitmap.Config.ARGB_4444;
+    AcPfd = Bitmap.createBitmap((int)(240*GraphicsScaleFactor), (int)(140*GraphicsScaleFactor), conf);
   }
 
   /**
@@ -112,7 +111,7 @@ public class Telemetry extends Application {
       socket.setSoTimeout(150); //This is needed to prevent udp read lock
     } catch (SocketException e) {
       e.printStackTrace();
-      Log.d("PPRZ_exception", "Udp SocketException");
+      if (DEBUG) Log.d("PPRZ_exception", "Udp SocketException");
     }
     byte[] buf = new byte[1024];
     packet = new DatagramPacket(buf, buf.length);
@@ -121,30 +120,33 @@ public class Telemetry extends Application {
 
   public void read_udp_data() {
 
-    try {
+        try {
 
-      socket.receive(packet);
-      //Log.d("PPRZ_info", "inp2");
+            socket.receive(packet);
 
-      // String2parse=new String(packet.getData());
-      String2parse = string_from_datagrampacket(packet);
-      //Log.d("PPRZ_info", "inp3");
-      if ((String2parse != null) && (!String2parse.equals(String2parse_buf))) {
-        String2parse_buf = String2parse;
-        parse_udp_string(String2parse);
-      }
+            String2parse=  new String(packet.getData(), packet.getOffset(), packet.getLength());
+            //!!TODO line below is for compatibility. Will be
+            //String2parse=  new String(packet.getData(), packet.getOffset(), packet.getLength()-1);
+
+            if ((String2parse != null) && (!String2parse.equals(String2parse_buf))) {
+                String2parse_buf = String2parse;
+                //if (DEBUG) Log.d("PPRZ_exception", "Udp Package Received:" + String2parse);
+                parse_udp_string(String2parse);
+                String2parse=null;
+            }
 
 
-    } catch (Exception e) {
-      Log.d("PPRZ_exception", "Error#3 .. Udp Package Read Error");
+        } catch (Exception e) {
+            //ignore java.net.SocketTimeoutException
+            //if (DEBUG) Log.d("PPRZ_exception", "Error#3 .. Udp Package Read Error:" + e.toString());
+        }
+
     }
-
-  }
 
   //Draw pfd for selected aircraft
   private void draw_pfd(int AcInd) {
 
-    AcPfd = muiGraphics.create_pfd2(Double.parseDouble(AircraftData[SelAcInd].Roll), Double.parseDouble(AircraftData[SelAcInd].Pitch), Double.parseDouble(AircraftData[SelAcInd].Heading), AircraftData[SelAcInd].Altitude, AircraftData[SelAcInd].Battery, AircraftData[SelAcInd].GpsMode, GraphicsScaleFactor);
+    muiGraphics.create_pfd2(AcPfd, Double.parseDouble(AircraftData[SelAcInd].Roll), Double.parseDouble(AircraftData[SelAcInd].Pitch), Double.parseDouble(AircraftData[SelAcInd].Heading), AircraftData[SelAcInd].Altitude, AircraftData[SelAcInd].Battery, AircraftData[SelAcInd].GpsMode,AircraftData[SelAcInd].AC_DlAlt, GraphicsScaleFactor);
 
   }
 
@@ -164,9 +166,7 @@ public class Telemetry extends Application {
       int AcIndex = get_indexof_ac(Integer.parseInt(ParsedData[2]));
 
       if (AcIndex >= 0) {
-        //
-        //
-        // AircraftData[AcIndex].FlightTime
+
         AircraftData[AcIndex].ApMode = ParsedData[3];
         AircraftData[AcIndex].GpsMode = ParsedData[7];
         AircraftData[AcIndex].StateFilterMode = ParsedData[10];
@@ -185,13 +185,12 @@ public class Telemetry extends Application {
         if (AircraftData[AcIndex].AC_Enabled && AcIndex == SelAcInd) {
           ViewChanged = true;
         }
-
         return;
       } else {
-        Log.d("PPRZ_info", "NAV_STATUS can't be parsed!");
-
+        if (DEBUG) Log.d("PPRZ_info", "NAV_STATUS can't be parsed!");
+        return;
       }
-    }//END OF NAV_STATUS
+    }//END OF AP_STATUS
 
 
     //Parse Nav_Status
@@ -218,8 +217,8 @@ public class Telemetry extends Application {
         AircraftData[AcIndex].SelectedBlock = BlockId;
         return;
       } else {
-        Log.d("PPRZ_info", "NAV_STATUS can't be parsed!");
-
+        if (DEBUG) Log.d("PPRZ_info", "NAV_STATUS can't be parsed!");
+        return;
       }
     }//END OF NAV_STATUS
 
@@ -240,23 +239,21 @@ public class Telemetry extends Application {
 
         //If battery is changed this will impact ui
         if (!(bat.equals(AircraftData[AcIndex].Battery))) {
-          Log.d("PPRZ_info", "eski pil=" + AircraftData[AcIndex].Battery + " Yeni pil" + bat);
+            if (DEBUG) Log.d("PPRZ_info", "Old Battery=" + AircraftData[AcIndex].Battery + " New Battery:" + bat);
           AircraftData[AcIndex].Battery = bat;
           BatteryChanged = true;
           ViewChanged = true;
           //check_marker_options(AcIndex); //Check if AC is ready to be shown on ui
         }
 
-
         AircraftData[AcIndex].EngineStatusChanged = true;
         if (AircraftData[AcIndex].AC_Enabled) {
           ViewChanged = true;
         }
-
         return;
       } else {
-        Log.d("PPRZ_info", "ENGINE_STATUS can't be parsed!");
-
+        if (DEBUG) Log.d("PPRZ_info", "ENGINE_STATUS can't be parsed!");
+        return;
       }
     }//END OF ENGINE_STATUS
 
@@ -276,13 +273,31 @@ public class Telemetry extends Application {
         AircraftData[AcIndex].Position = new LatLng(Double.parseDouble(ParsedData[6]), Double.parseDouble(ParsedData[7]));
         AircraftData[AcIndex].Speed = ParsedData[8].substring(0, (ParsedData[8].indexOf(".") + 2));
         AircraftData[AcIndex].Altitude = ParsedData[10].substring(0, ParsedData[10].indexOf("."));
+        AircraftData[AcIndex].AGL = ParsedData[12].substring(0, ParsedData[12].indexOf("."));
 
+        if (!AircraftData[AcIndex].Altitude.equals(AircraftData[AcIndex].AGL)) {
+            AircraftData[AcIndex].Altitude = AircraftData[AcIndex].Altitude + " m (AGL:" + AircraftData[AcIndex].AGL + ")";
+        }
+          else
+        {
+            AircraftData[AcIndex].Altitude = AircraftData[AcIndex].Altitude + " m";
+        }
+
+        String BufAirspeed= ParsedData[15].substring(0, ParsedData[15].indexOf(".") + 1);
+
+        if ( !BufAirspeed.equals(AircraftData[AcIndex].AirSpeed) && (Double.parseDouble(BufAirspeed))>=0 ) {
+          AircraftData[AcIndex].AirSpeed= ParsedData[15].substring(0, ParsedData[15].indexOf(".") + 1);
+          AircraftData[AcIndex].AirspeedEnabled = true;
+          AircraftData[AcIndex].AirspeedChanged = true;
+          if (DEBUG) Log.d("PPRZ_info", "Airspeed Enabled.");
+
+        }
         //Add position to queue (for map lines)
-        AircraftData[AcIndex].AC_Path.add(AircraftData[AcIndex].Position);
 
-        if (AircraftData[AcIndex].AC_Path.size() > 150) {
+        if (AircraftData[AcIndex].AC_Path.size() >= 150) {
           AircraftData[AcIndex].AC_Path.remove(0);
         }
+          AircraftData[AcIndex].AC_Path.add(AircraftData[AcIndex].Position);
 
         if (AircraftData[AcIndex].AC_Enabled) {
           AircraftData[AcIndex].AC_Position_Changed = true;
@@ -294,12 +309,9 @@ public class Telemetry extends Application {
             draw_pfd(AcIndex);
           }
         }
-
-
-        //Other variables will be here>>><<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         return;
       } else {
-        Log.d("PPRZ_info", "ENGINE_STATUS can't be parsed!");
+        if (DEBUG) Log.d("PPRZ_info", "ENGINE_STATUS can't be parsed!");
         return;
       }
     }//END OF FLIGHT_PARAM
@@ -324,9 +336,9 @@ public class Telemetry extends Application {
         //We need to check latlong variables if they are different then they should be shown in ui;
         LatLng LatLngBuf = new LatLng(Double.parseDouble(ParsedData[4]), Double.parseDouble(ParsedData[5]));
 
-        //if incoming latlon is different then before
+        //if incoming latlong is different then before
         if (!(LatLngBuf.equals(AircraftData[AcIndex].AC_Markers[WpInd].WpPosition))) {
-          Log.d("PPRZ_info", "marker changed  for Ac id: " + AcIndex + " wpind:" + WpInd);
+          if (DEBUG) Log.d("PPRZ_info", "Marker changed  for Ac id: " + AcIndex + " wpind:" + WpInd);
           AircraftData[AcIndex].AC_Markers[WpInd].WpPosition = LatLngBuf;
           AircraftData[AcIndex].AC_Markers[WpInd].MarkerModified = true;
           AircraftData[AcIndex].MarkerModified = true;
@@ -334,62 +346,54 @@ public class Telemetry extends Application {
           ViewChanged = true;
         }
 
-        //If marker havn't been added then raise the flag to add it in the ui
+        //If marker haven't been added then raise the flag to add it in the ui
         if ((AircraftData[AcIndex].MarkersEnabled) && (AircraftData[AcIndex].AC_Markers[WpInd].WpMarker == null)) {
           NewMarkerAdded = true;
           AircraftData[AcIndex].NewMarkerAdded = true;
           ViewChanged = true;
         }
-
-
         return;
       } else {
-        Log.d("PPRZ_info", "WAYPOINT_MOVED can't be parsed!");
+        if (DEBUG) Log.d("PPRZ_info", "WAYPOINT_MOVED can't be parsed!");
         return;
       }
 
 
     }//END OF  WAYPOINT_MOVED
 
-    //Parse AirSpeed
-    if (LastTelemetryString.matches("(^\\S* AIRSPEED (\\S*) (\\S*) (\\S*) (\\S*))")) {
 
-      String[] ParsedData = LastTelemetryString.split(" ");
-      int AcIndex = get_indexof_ac(Integer.parseInt(ParsedData[0]));
+      //PARSE DL_VALUES MESSAGES
+      if (LastTelemetryString.matches("(^ground DL_VALUES .*)")) {
 
-      if (AcIndex >= 0) {
+          String[] ParsedData = LastTelemetryString.split(" ");
+          //Get AC  index
+          int AcIndex = get_indexof_ac(Integer.parseInt(ParsedData[2]));
+          check_ac_datas(AcIndex);
 
-        AircraftData[AcIndex].AirSpeed = ParsedData[2].substring(0, (ParsedData[2].indexOf(".") + 2));
+          if (AcIndex >= 0) {
 
-        if (AircraftData[AcIndex].AC_Enabled && AcIndex == SelAcInd) {
-          //Changed airspeed
-          AirspeedChanged = true;
-          ViewChanged = true;
+              if (AircraftData[AcIndex].AC_AltID>0) {
 
-          if ((Double.parseDouble(AircraftData[AcIndex].AirSpeed) < AirSpeedMinSetting) && (Double.parseDouble(AircraftData[AcIndex].AirSpeed) > AIRSPEED_MIN)) {
-            AirspeedWarning = true;
-          } else {
-            //Check other AC's airspeed;
-            int i = 0;
-            for (i = 0; i <= IndexEnd; i++) {
-              if ((Double.parseDouble(AircraftData[AcIndex].AirSpeed) < AirSpeedMinSetting) && (Double.parseDouble(AircraftData[AcIndex].AirSpeed) > AIRSPEED_MIN)) {
-                AirspeedWarning = true;
-                return;
+                  String[] DlData = ParsedData[3].split(",");
+
+                  if ( (DlData.length > AircraftData[AcIndex].AC_AltID) && (!"42".equals(DlData[AircraftData[AcIndex].AC_AltID]))  ) {
+                      //Log.d("PPRZ_info", "DLData Length >>" + DlData.length);
+                      AircraftData[AcIndex].AC_DlAlt= DlData[AircraftData[AcIndex].AC_AltID];
+                      AircraftData[AcIndex].AC_DlAlt= AircraftData[AcIndex].AC_DlAlt.substring(0, AircraftData[AcIndex].AC_DlAlt.indexOf((".")));
+                      //ParsedData[7].substring(0, (ParsedData[7].indexOf(".") + 2));
+                  }
+
               }
 
-            }
-            AirspeedWarning = false;
+              return;
+          } else {
+              if (DEBUG) Log.d("PPRZ_info", "DL_VALUES can't be parsed!");
+              return;
           }
 
-          return;
-        }
 
-        return;
-      } else {
-        Log.d("PPRZ_info", "NAV_STATUS can't be parsed!");
+      }//END OF DL_VALUES
 
-      }
-    }//END OF NAV_STATUS
 
   } //End of parse_udp_string
 
@@ -400,6 +404,7 @@ public class Telemetry extends Application {
    */
   public void parse_tcp_string(String LastTelemetryString) {
 
+    //Log.d("PPRZ_info", "Incoming str!" + LastTelemetryString);
     //Parse app server data
     int AcIndex;
 
@@ -418,16 +423,16 @@ public class Telemetry extends Application {
         AircraftData[AcIndex].AC_Color = ParsedData[5];
         AircraftData[AcIndex].AC_LaunchID = ParsedData[6];
         AircraftData[AcIndex].AC_KillID = ParsedData[7];
+        AircraftData[AcIndex].AC_AltID = Integer.parseInt(ParsedData[8]);
 
         AircraftData[AcIndex].AC_Logo = muiGraphics.create_ac_icon(AircraftData[AcIndex].AC_Type, AircraftData[AcIndex].AC_Color, GraphicsScaleFactor, (AcIndex == SelAcInd));
         AircraftData[AcIndex].AC_Carrot_Logo = muiGraphics.create_ac_carrot(AircraftData[AcIndex].AC_Color, GraphicsScaleFactor);
 
-
-        //Log.d("PPRZ_info", "Ind: " + AcIndex + " name" + AircraftData[AcIndex].AC_Name + "color" + AircraftData[AcIndex].AC_Color);
-
-
+        if (DEBUG) Log.d("PPRZ_info", "AC Data received. Ind: " + AcIndex + " Name" + AircraftData[AcIndex].AC_Name + " Color" + AircraftData[AcIndex].AC_Color);
+        return;
       }
-      Log.d("PPRZ_info", "AppServer ACd can't be parsed!");
+      if (DEBUG) Log.d("PPRZ_info", "AppServer ACd can't be parsed!");
+      return;
     }
 
     //Parse waypoint data
@@ -447,11 +452,10 @@ public class Telemetry extends Application {
           AircraftData[AcIndex].AC_Markers[Integer.parseInt(ParsedWpData[0])].WpName = ParsedWpData[1];
           AircraftData[AcIndex].AC_Markers[Integer.parseInt(ParsedWpData[0])].WpMarkerIcon = muiGraphics.create_marker_icon(AircraftData[AcIndex].AC_Color, ParsedWpData[1], GraphicsScaleFactor);
 
-          Log.d("PPRZ_info", "wp parsed for ac=" + AcIndex + " marker ind=" + Integer.parseInt(ParsedWpData[0]));
+          if (DEBUG) Log.d("PPRZ_info", "WP parsed for ac= " + AcIndex + " marker ind=" + Integer.parseInt(ParsedWpData[0]));
 
         }
         AircraftData[AcIndex].MarkersEnabled = true;
-
       }
       return;
     }
@@ -479,10 +483,11 @@ public class Telemetry extends Application {
         }
         AircraftData[AcIndex].BlocksEnabled = true;
         AircraftData[AcIndex].BlockCount = ParsedBlData.length - 1;
-
       }
+      return;
     }
-
+    //This will be handy in future. (Sending IVY messages with TCP)
+    parse_udp_string(LastTelemetryString);
   } //End of parse_tcp_string
 
   //Check all needed ac datas are here to show on ui
@@ -519,7 +524,7 @@ public class Telemetry extends Application {
     //TODO Check AircraftData[IndexOfAc].MarkersEnabled=true; before coming here..
     if (AircraftData[IndexOfAc].MarkersEnabled == false) {
       //Missing markers data
-      Log.d("PPRZ_info", "wp request=" + AircraftData[IndexOfAc].AC_Id);
+      if (DEBUG) Log.d("PPRZ_info", "wp request=" + AircraftData[IndexOfAc].AC_Id);
       get_new_waypoint_data(AircraftData[IndexOfAc].AC_Id);
       return false;
     }
@@ -610,7 +615,6 @@ public class Telemetry extends Application {
       AircraftData[IndexOfAc].AC_Markers[WpId].WpId = WpId;
       AircraftData[IndexOfAc].AC_Markers[WpId].WpEnabled = true;
       AircraftData[IndexOfAc].NumbOfWps++;
-      //TODO create marker icon
       //get_new_waypoint_data(AircraftData[IndexOfAc].AC_Id);
       return true;
     }
@@ -650,7 +654,7 @@ public class Telemetry extends Application {
       }
     }
     //no place for new aircraft
-    Log.d("PPRZ_info", "No place for new ac record");
+    if (DEBUG) Log.d("PPRZ_info", "No place for new ac record");
     return -1;
   }
 
@@ -668,6 +672,8 @@ public class Telemetry extends Application {
     String AC_Type;
     String AC_LaunchID;
     String AC_KillID;
+    int AC_AltID;
+    String AC_DlAlt;
     Marker AC_Marker;
     Bitmap AC_Logo;
     Bitmap AC_Carrot_Logo;
@@ -676,8 +682,10 @@ public class Telemetry extends Application {
     //Queue<LatLng> AC_Path;
     ArrayList<LatLng> AC_Path = new ArrayList<LatLng>();
     Polyline Ac_PolLine;
+      PolylineOptions Ac_PolLine_Options;
     String Altitude;
     boolean Altitude_Changed = false;
+    String AGL;
     LatLng Position;
     String Heading = "0";
     String Speed;
@@ -702,6 +710,9 @@ public class Telemetry extends Application {
     mBlock[] AC_Blocks;
     int BlockCount;
     boolean NewBlockAdded = false;
+
+    boolean AirspeedEnabled = false;
+    boolean AirspeedChanged = false;
   }
 
   //Marker sub class

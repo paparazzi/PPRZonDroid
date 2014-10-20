@@ -28,6 +28,7 @@ package com.PPRZonDroid;
  */
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -65,8 +66,11 @@ public class AcListAdapter extends ArrayAdapter<Model> {
 
 
     rowView = inflater.inflate(R.layout.aclist, parent, false);
+      TextView AC_Name=(TextView) rowView.findViewById(R.id.ac_name);
+
     if (position == SelectedInd) {
-      rowView.setBackgroundColor(R.color.red);
+      rowView.setBackgroundColor(Color.parseColor("#479cd5"));
+      AC_Name.setTextColor(Color.WHITE);
     }
     // 3. Get icon,ac_name & ac_battery views from the rowView
     ImageView imgView = (ImageView) rowView.findViewById(R.id.item_icon);

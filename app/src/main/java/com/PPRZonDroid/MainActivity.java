@@ -34,26 +34,31 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.LayoutAnimationController;
+import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Switch;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -73,9 +78,13 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static java.lang.Double.parseDouble;
+
 
 public class MainActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+  //TODO ! FLAG MUST BE 'FALSE' FOR PLAY STORE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  boolean DEBUG=false;
 
   //Application Settings
   public static final String SERVER_IP_ADDRESS = "server_ip_adress_text";
@@ -84,10 +93,16 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   public static final String MIN_AIRSPEED = "minimum_air_speed";
   public static final String USE_GPS = "use_gps_checkbox";
   public static final String Control_Pass = "app_password";
+  public static final String BLOCK_C_TIMEOUT = "block_change_timeout";
+  public static final String DISABLE_SCREEN_DIM = "disable_screen_dim";
+
   public Telemetry AC_DATA;                       //Class to hold&proces AC Telemetry Data
   boolean AcLocked = false;
   TextView DialogTextWpName;
   Button DialogButtonConfirm;
+  Button Alt_DialogButtonConfirm;
+  Button Alt_ResToDlAlt;
+  Button Alt_ResToDesAlt;
   EditText DialogWpAltitude;
   TextView DialogTextWpLat;
   TextView DialogTextWpLon;
@@ -122,12 +137,14 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   private TextView MapAlt;
   private TextView MapThrottle;
   private ImageView Pfd;
-  private ToggleButton Button_ConnectToServer;
+
+  private Button Button_ConnectToServer;
   private ToggleButton ChangeVisibleAcButon;
-  private Switch LockToAcSwitch;
+  private ToggleButton LockToAcSwitch;
   private DrawerLayout mDrawerLayout;
   //Dialog components
   private Dialog WpDialog;
+  private Dialog AltDialog;
   //Position descriptions >> in future this needs to be an array or struct
   private LatLng AC_Pos = new LatLng(43.563958, 1.481391);
   private String SendStringBuf;
@@ -136,6 +153,13 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   //Background task to read and write telemery msgs
   private boolean isTaskRunning;
+
+  private boolean DisableScreenDim;
+
+  private CountDownTimer BL_CountDown;
+  private int BL_CountDownTimerValue;
+  private int JumpToBlock;
+  private int BL_CountDownTimerDuration;
 
   private ArrayList<Model> generateDataAc() {
     AcList = new ArrayList<Model>();
@@ -147,24 +171,30 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     return BlList;
   }
 
+  private Thread mTCPthread;
+
+  private NumberPicker mNumberPickerThus,mNumberPickerHuns, mNumberPickerTens,mNumberPickerOnes;
+
   /**
    * Setup TCP and UDP connections of Telemetry class
    */
   private void setup_telemetry_class() {
 
     //Create Telemetry class
-    AC_DATA = (Telemetry) getApplication();
+    AC_DATA = new Telemetry();
+
     //Read & setup Telemetry class
-    AC_DATA.ServerIp = AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_default_server_ip));
-    AC_DATA.ServerTcpPort = Integer.parseInt(AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_default_server_port)));
-    AC_DATA.UdpListenPort = Integer.parseInt(AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_default_local_port)));
-    AC_DATA.AirSpeedMinSetting = Double.parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
+    AC_DATA.ServerIp = AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_ip_address_default));
+    AC_DATA.ServerTcpPort = Integer.parseInt(AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_port_number_default)));
+    AC_DATA.UdpListenPort = Integer.parseInt(AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_local_port_number_default)));
+    AC_DATA.AirSpeedMinSetting = parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
+    AC_DATA.DEBUG=DEBUG;
 
-    AC_DATA.prepare_class();
     AC_DATA.GraphicsScaleFactor = getResources().getDisplayMetrics().density;
+    AC_DATA.prepare_class();
 
-    AC_DATA.tcp_connection();
-    AC_DATA.mTcpClient.setup_tcp();
+    //AC_DATA.tcp_connection();
+    //AC_DATA.mTcpClient.setup_tcp();
     AC_DATA.setup_udp();
   }
 
@@ -173,15 +203,23 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
    */
   private void set_up_app() {
 
-    //Get app settings
+
+
+    //if ( Debug.isDebuggerConnected() ) DEBUG= true;
+    //else DEBUG=false;
+
+      //Get app settings
     AppSettings = PreferenceManager.getDefaultSharedPreferences(this);
     AppSettings.registerOnSharedPreferenceChangeListener(this);
 
-    AppPassword = new String(AppSettings.getString("app_password", ""));
+    AppPassword = (AppSettings.getString("app_password", ""));
 
-    //Setup waypoint dialog
+    DisableScreenDim = AppSettings.getBoolean("disable_screen_dim", true);
+
+    /* Setup waypoint dialog */
     WpDialog = new Dialog(this);
     WpDialog.setContentView(R.layout.wp_modified);
+
     DialogTextWpName = (TextView) WpDialog.findViewById(R.id.textViewWpName);
     DialogButtonConfirm = (Button) WpDialog.findViewById(R.id.buttonConfirm);
     DialogWpAltitude = (EditText) WpDialog.findViewById(R.id.editTextAltitude);
@@ -193,7 +231,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     DialogAltDown.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Double alt = Double.parseDouble(DialogWpAltitude.getText().toString()) - 10;
+        Double alt = parseDouble(DialogWpAltitude.getText().toString()) - 10;
         DialogWpAltitude.setText(alt.toString());
       }
     });
@@ -201,7 +239,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     DialogAltUp.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Double alt = Double.parseDouble(DialogWpAltitude.getText().toString()) + 10;
+        Double alt = parseDouble(DialogWpAltitude.getText().toString()) + 10;
         DialogWpAltitude.setText(alt.toString());
       }
     });
@@ -217,52 +255,81 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       }
     });
 
+    /* Setup altitude dialog */
+    AltDialog = new Dialog(this);
+    AltDialog.setContentView(R.layout.alt_modified);
+
+    Alt_DialogButtonConfirm= (Button) AltDialog.findViewById(R.id.buttonConfAlt);
+
+      Alt_DialogButtonConfirm.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+
+              String DlAlt ="";
+
+              DlAlt= DlAlt + mNumberPickerThus.getValue();
+              DlAlt= DlAlt + mNumberPickerHuns.getValue();
+              DlAlt= DlAlt + mNumberPickerTens.getValue();
+              DlAlt= DlAlt + mNumberPickerOnes.getValue();
+              SendStringBuf = "dl DL_SETTING " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Id + " " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_AltID +  " " + DlAlt;
+              //Log.d("PPRZ_info", SendStringBuf );
+              send_to_server(SendStringBuf, true);
+
+              AltDialog.dismiss();
+          }
+      });
+
+    Alt_ResToDlAlt =  (Button) AltDialog.findViewById(R.id.buttonResToDlAlt);
+      Alt_ResToDlAlt.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+
+             fill_alt(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_DlAlt);
+
+          }
+      });
+
+
+    Alt_ResToDesAlt =  (Button) AltDialog.findViewById(R.id.buttonResToAcAlt);
+      Alt_ResToDesAlt.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+
+              fill_alt(AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude);
+
+          }
+      });
+
+    mNumberPickerThus = (NumberPicker) AltDialog.findViewById(R.id.numberPickerThus);
+    mNumberPickerThus.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+    mNumberPickerThus.setMinValue(0);
+    mNumberPickerThus.setMaxValue(9);
+
+    mNumberPickerHuns = (NumberPicker) AltDialog.findViewById(R.id.numberPickerHuns);
+    mNumberPickerHuns.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+    mNumberPickerHuns.setMinValue(0);
+    mNumberPickerHuns.setMaxValue(9);
+
+    mNumberPickerTens = (NumberPicker) AltDialog.findViewById(R.id.numberPickerTens);
+    mNumberPickerTens.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+    mNumberPickerTens.setMinValue(0);
+    mNumberPickerTens.setMaxValue(9);
+
+    mNumberPickerOnes = (NumberPicker) AltDialog.findViewById(R.id.numberPickerOnes);
+    mNumberPickerOnes.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
+    mNumberPickerOnes.setMinValue(0);
+    mNumberPickerOnes.setMaxValue(9);
+
     //Setup left drawer
     mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
     //Setup AC List
-    mAcListAdapter = new AcListAdapter(this, generateDataAc());
-
-    // if extending Activity 2. Get ListView from activity_main.xml
-    AcListView = (ListView) findViewById(R.id.AcList);
-    View AppControls = getLayoutInflater().inflate(R.layout.appcontrols, null);
-
-    //First item will be app controls
-    //This workaround applied to for app controls sliding to top if user slides them.
-    AcListView.addHeaderView(AppControls);
-
-    // 3. setListAdapter
-    AcListView.setAdapter(mAcListAdapter);
-    //Create onclick listener
-    AcListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (position >= 1) {
-          view.setSelected(true);
-          set_selected_ac(position - 1);
-          mDrawerLayout.closeDrawers();
-        }
-
-      }
-    });
+    setup_ac_list();
 
 
-    //Block Listview
-    mBlListAdapter = new BlockListAdapter(this, generateDataBl());
+    //Setup Block list
+    setup_block_list();
 
-    //
-    BlListView = (ListView) findViewById(R.id.BlocksList);
-    View FlightControls = getLayoutInflater().inflate(R.layout.flight_controls, null);
-    BlListView.addHeaderView(FlightControls);
-    BlListView.setAdapter(mBlListAdapter);
-    BlListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-      public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if (position >= 1) {
-          view.setSelected(true);
-          set_selected_block(position - 1);
-          mDrawerLayout.closeDrawers();
-        }
-      }
-    });
 
 
     //Set map zoom level variable (if any);
@@ -274,13 +341,14 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     MapAlt = (TextView) findViewById(R.id.Alt_On_Map);
     MapThrottle = (TextView) findViewById(R.id.ThrottleText);
     Pfd = (ImageView) findViewById(R.id.imageView_Pfd);
+    //mToolTip = (ImageView) findViewById(R.id.imageFeedBack );
 
-    Button_ConnectToServer = (ToggleButton) findViewById(R.id.toggleButton_ConnectToServer);
+    Button_ConnectToServer = (Button) findViewById(R.id.Button_ConnectToServer);
     setup_map_ifneeded();
 
 
-    LockToAcSwitch = (Switch) findViewById(R.id.switch_TraceAircraft);
-    LockToAcSwitch.setSelected(true);
+    LockToAcSwitch = (ToggleButton) findViewById(R.id.toggleButton_TraceAircraft);
+    //LockToAcSwitch.setSelected(true);
     ChangeVisibleAcButon = (ToggleButton) findViewById(R.id.toggleButtonVisibleAc);
     ChangeVisibleAcButon.setSelected(false);
 
@@ -291,22 +359,124 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     TextViewStateFilterMode = (TextView) findViewById(R.id.State_Filter_On_Map);
     TextViewSpeed = (TextView) findViewById(R.id.SpeedText);
     TextViewAirspeed = (TextView) findViewById(R.id.AirSpeed_On_Map);
+    TextViewAirspeed.setVisibility(View.INVISIBLE);
+
+  }
+
+  private  void setup_block_list() {
+
+      //Block Listview
+      setup_counter();
+
+      mBlListAdapter = new BlockListAdapter(this, generateDataBl());
+
+      //
+      BlListView = (ListView) findViewById(R.id.BlocksList);
+      View FlightControls = getLayoutInflater().inflate(R.layout.flight_controls, null);
+      BlListView.addHeaderView(FlightControls);
+      BlListView.setAdapter(mBlListAdapter);
+      BlListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+          public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+              BL_CountDown.cancel();
+              BL_CountDownTimerValue=BL_CountDownTimerDuration;
+              mBlListAdapter.ClickedInd = position-1;
+              JumpToBlock= position-1;
+
+              BL_CountDown.start();
+              mBlListAdapter.notifyDataSetChanged();
+
+
+          }
+      });
+
 
 
   }
 
-  /**
+  private void setup_counter() {
+      //Get timeout from appsettings
+      BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString("block_change_timeout", "3")) *1000;
+      BL_CountDownTimerValue =BL_CountDownTimerDuration;
+      //Setup timer for progressbar of clicked block
+      BL_CountDown = new CountDownTimer(BL_CountDownTimerDuration, 100 ) {
+          @Override
+          public void onTick(long l) {
+
+              if (BL_CountDownTimerDuration>0) {
+                  BL_CountDownTimerValue= BL_CountDownTimerValue - 100;
+                  mBlListAdapter.BlProgress.setProgress(((BL_CountDownTimerValue*100) /BL_CountDownTimerDuration)) ;
+                  //if (DEBUG) Log.d("PPRZ_info", "Counter value: " + process_val );
+              }
+          }
+
+          @Override
+          public void onFinish() {
+              if (BL_CountDownTimerDuration>0) {
+
+                  BL_CountDownTimerValue= BL_CountDownTimerValue - 100;
+                  mBlListAdapter.BlProgress.setProgress(((BL_CountDownTimerValue*100) /BL_CountDownTimerDuration)) ;
+                  BL_CountDownTimerValue = BL_CountDownTimerDuration;
+                  mBlListAdapter.ClickedInd = -1;
+                  set_selected_block(JumpToBlock, false);
+                  mBlListAdapter.notifyDataSetChanged();
+
+              }
+          }
+
+      };
+  }
+
+  private void setup_ac_list() {
+      mAcListAdapter = new AcListAdapter(this, generateDataAc());
+
+      // if extending Activity 2. Get ListView from activity_main.xml
+      AcListView = (ListView) findViewById(R.id.AcList);
+      View AppControls = getLayoutInflater().inflate(R.layout.appcontrols, null);
+
+      //First item will be app controls
+      //This workaround applied to for app controls sliding to top if user slides them.
+      AcListView.addHeaderView(AppControls);
+
+      // 3. setListAdapter
+      AcListView.setAdapter(mAcListAdapter);
+      //Create onclick listener
+      AcListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+          if (position >= 1) {
+           BL_CountDown.cancel();
+           BL_CountDownTimerValue=BL_CountDownTimerDuration;
+           mBlListAdapter.ClickedInd=-1;
+           mBlListAdapter.notifyDataSetChanged();
+
+           view.setSelected(true);
+           set_selected_ac(position - 1,true);
+           mDrawerLayout.closeDrawers();
+           }
+
+            }
+        });
+
+  }
+
+   /**
    * Set Selected Block
    *
    * @param BlocId
    */
-  private void set_selected_block(int BlocId) {
+  private void set_selected_block(int BlocId,boolean ReqFromServer) {
 
-    AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock = BlocId;
-    mBlListAdapter.SelectedInd = BlocId + 1;
-    mBlListAdapter.notifyDataSetChanged();
-    //Notify server
-    send_to_server("PPRZonDroid JUMP_TO_BLOCK " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Id + " " + BlocId, true);
+    //AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock = BlocId;
+
+    if (ReqFromServer){
+        mBlListAdapter.SelectedInd = BlocId + 1;
+        mBlListAdapter.notifyDataSetChanged();
+    }
+    else {
+        //Notify server
+        send_to_server("PPRZonDroid JUMP_TO_BLOCK " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Id + " " + BlocId, true);
+
+    }
 
   }
 
@@ -314,18 +484,26 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
    * Set Selected airplane
    *
    * @param AcInd
+   * @param centerAC : want to center AC?
    */
-  private void set_selected_ac(int AcInd) {
+  private void set_selected_ac(int AcInd,boolean centerAC) {
 
     AC_DATA.SelAcInd = AcInd;
     //Set Title;
     setTitle(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Name);
 
-    mAcListAdapter.SelectedInd = AcInd;
-    mAcListAdapter.notifyDataSetChanged();
-
     refresh_block_list();
     set_marker_visibility();
+
+    //set airspeed visibility
+    if (AC_DATA.AircraftData[AC_DATA.SelAcInd].AirspeedEnabled) {
+        TextViewAirspeed.setVisibility(View.VISIBLE);
+        TextViewAirspeed.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].AirSpeed + " m/s");
+    }
+      else
+    {
+        TextViewAirspeed.setVisibility(View.INVISIBLE);
+    }
 
     for (int i = 0; i <= AC_DATA.IndexEnd; i++) {
       //Is AC ready to show on ui?
@@ -336,10 +514,18 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.fromBitmap(AC_DATA.AircraftData[i].AC_Logo);
         AC_DATA.AircraftData[i].AC_Marker.setIcon(bitmapDescriptor);
         //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(AC_DATA.AircraftData[AC_DATA.SelAcInd].Position, MapZoomLevel), 1500, null);
-        center_aircraft();
+          if (centerAC)
+          {
+              center_aircraft();
+          }
+
       }
 
     }
+
+      mAcListAdapter.SelectedInd = AcInd;
+      mAcListAdapter.notifyDataSetChanged();
+      refresh_ac_list();
 
   }
 
@@ -354,8 +540,27 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     for (i = 0; i < AC_DATA.AircraftData[AC_DATA.SelAcInd].BlockCount; i++) {
       BlList.add(new BlockModel(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Blocks[i].BlName));
     }
-
+    mBlListAdapter.BlColor = AC_DATA.muiGraphics.get_color(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Color);
     mBlListAdapter.SelectedInd = AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock;
+
+
+      AnimationSet set = new AnimationSet(true);
+
+      Animation animation = new AlphaAnimation(0.0f, 1.0f);
+
+      animation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, +1.0f,
+              Animation.RELATIVE_TO_SELF, 0.0f,
+              Animation.RELATIVE_TO_SELF, 0.0f,
+              Animation.RELATIVE_TO_SELF, 0.0f
+      );
+      animation.setDuration(250);
+      set.addAnimation(animation);
+
+      LayoutAnimationController controller =
+              new LayoutAnimationController(set, 0.25f);
+      BlListView.setLayoutAnimation(controller);
+
+
     mBlListAdapter.notifyDataSetChanged();
   }
 
@@ -455,7 +660,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         continue; //we dont have data for this wp yet
 
       if (AC_DATA.AircraftData[AcInd].AC_Marker.getId().equals(WpID)) {
-        set_selected_ac(AcInd);
+        set_selected_ac(AcInd,true);
         Toast.makeText(getApplicationContext(), "Selected A/C =  " + AC_DATA.AircraftData[AcInd].AC_Name, Toast.LENGTH_SHORT).show();
         return true;
 
@@ -533,29 +738,24 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       }
     }
 
-    AC_DATA.BatteryChanged = false;
-    AC_DATA.NewAcAdded = false;
-    //mAcListAdapter.SelectedInd=AC_DATA.SelAcInd;
-
-    set_selected_ac(AC_DATA.SelAcInd);
-
   }
 
   private void refresh_map_lines(int AcInd) {
 
-    if (AC_DATA.AircraftData[AcInd].Ac_PolLine != null) {
-      AC_DATA.AircraftData[AcInd].Ac_PolLine.remove();
-    }
+    //Create the polyline object of ac if it hasn't been created before
+    if (null == AC_DATA.AircraftData[AcInd].Ac_PolLine) {
+          PolylineOptions mPolylineOptions = new PolylineOptions()
+                  .addAll(AC_DATA.AircraftData[AcInd].AC_Path)
+                  .width(2 * AC_DATA.GraphicsScaleFactor)
+                  .color(AC_DATA.muiGraphics.get_color(AC_DATA.AircraftData[AcInd].AC_Color))
+                  .geodesic(false);
+          AC_DATA.AircraftData[AcInd].Ac_PolLine = mMap.addPolyline(mPolylineOptions);
+     }
 
+    //Refresh polyline with new values
+    AC_DATA.AircraftData[AcInd].Ac_PolLine.setPoints(AC_DATA.AircraftData[AcInd].AC_Path);
 
-    PolylineOptions rectOptions = new PolylineOptions()
-            .addAll(AC_DATA.AircraftData[AcInd].AC_Path)
-            .width(2 * AC_DATA.GraphicsScaleFactor)
-            .color(AC_DATA.muiGraphics.get_color(AC_DATA.AircraftData[AcInd].AC_Color))
-            .geodesic(true);
-
-    AC_DATA.AircraftData[AcInd].Ac_PolLine = mMap.addPolyline(rectOptions);
-
+    //Clean the flags
     if (AcInd == AC_DATA.SelAcInd || ShowOnlySelected == false) {
       AC_DATA.AircraftData[AcInd].Ac_PolLine.setVisible(true);
     } else {
@@ -588,10 +788,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
                       .draggable(true)
                       .icon(BitmapDescriptorFactory.fromBitmap(AC_DATA.AircraftData[AcIndex].AC_Carrot_Logo))
       );
-
-
     }
-
   }
 
   //REfresh markers
@@ -650,11 +847,13 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
             if ((AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpPosition == null) || (AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarker != null))
               continue; //we dont have data for this wp yet
-            //Log.d("PPRZ_info", "New marker added for Ac id: " + AcInd + " wpind:" + MarkerInd);
+
+            if (DEBUG) Log.d("PPRZ_info", "New marker added for Ac id: " + AcInd + " wpind:" + MarkerInd);
             AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarker = mMap.addMarker(new MarkerOptions()
                     .position(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpPosition)
                     .title(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpName)
                     .draggable(true)
+                    .anchor(0.5f,0.378f)
                     .icon(BitmapDescriptorFactory.fromBitmap(AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarkerIcon)));
             AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].WpMarker.setVisible(AcMarkerVisible(AcInd));
 
@@ -684,9 +883,9 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       for (AcInd = 0; AcInd <= AC_DATA.IndexEnd; AcInd++) {     //Search thru all aircrafts and check if they have marker added flag
 
         if (AC_DATA.AircraftData[AcInd].MarkerModified) {   //Does this aircraft has an added marker data?
-          Log.d("PPRZ_info", "Marker modified for AC= " + AcInd);
+          if (DEBUG) Log.d("PPRZ_info", "Marker modified for AC= " + AcInd);
           int MarkerInd = 1;
-          //Log.d("PPRZ_info", "trying to show ac markers of "+AcInd);
+          //if (DEBUG) Log.d("PPRZ_info", "trying to show ac markers of "+AcInd);
           //Search aircraft markers which has name but doesn't have marker
           for (MarkerInd = 1; (MarkerInd < AC_DATA.AircraftData[AcInd].NumbOfWps - 1); MarkerInd++) {
             //Log.d("PPRZ_info", "Searching Marker for AC= " + AcInd + " wpind:" + MarkerInd);
@@ -698,7 +897,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
             //Clean MarkerModified flag
             AC_DATA.AircraftData[AcInd].AC_Markers[MarkerInd].MarkerModified = false;
-            Log.d("PPRZ_info", "Marker modified for acid: " + AcInd + " wpind:" + MarkerInd);
+            if (DEBUG) Log.d("PPRZ_info", "Marker modified for acid: " + AcInd + " wpind:" + MarkerInd);
 
           }
           //Clean AC MarkerModified flag
@@ -808,15 +1007,43 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
     // We need an Editor object to make preference changes.
     // All objects are from android.context.Context
+
     SharedPreferences.Editor editor = AppSettings.edit();
 
     editor.putFloat("MapZoomLevel", MapZoomLevel);
 
     // Commit the edits!
     editor.commit();
+    AC_DATA.mTcpClient.sendMessage("removeme");
+    //TelemetryAsyncTask.isCancelled();
+    //AC_DATA.mTcpClient.stopClient();
+    isTaskRunning= false;
+    //TelemetryAsyncTask.cancel(true);
 
+    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
   }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        //Force to reconnect
+        //TcpSettingsChanged = true;
+        TelemetryAsyncTask = new ReadTelemetry();
+        TelemetryAsyncTask.execute();
+
+        if (DisableScreenDim) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //enable screen dim
+
+
+    }
 
   @Override
   protected void onStart() {
@@ -827,19 +1054,45 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // The following call pauses the rendering thread.
+        // If your OpenGL application is memory intensive,
+        // you should consider de-allocating objects that
+        // consume significant memory here.
+       // mGLView.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // The following call resumes a paused rendering thread.
+        // If you de-allocated graphic objects for onPause()
+        // this is a good place to re-allocate them.
+        //mGLView.onResume();
+    }
+
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
     setContentView(R.layout.activity_main);
 
+
+
     set_up_app();
+
+    if (DisableScreenDim) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+
     setup_telemetry_class();
-    new ReadTelemetry().execute();
-
-
+    TelemetryAsyncTask = new ReadTelemetry();
+    TelemetryAsyncTask.execute();
   }
 
+  private ReadTelemetry TelemetryAsyncTask;
 
 /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 * START OF UI FUNCTIONS >>>>>> START OF UI FUNCTIONS >>>>>> START OF UI FUNCTIONS >>>>>> START OF UI FUNCTIONS >>>>>>
@@ -852,43 +1105,57 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     //Changed settings will be applied on nex iteration of async task
 
     if (key.equals(SERVER_IP_ADDRESS)) {
-      AC_DATA.ServerIp = AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_default_server_ip));
-      //Log.d("PPRZ_info", "IP changed to: " + AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_default_server_ip)));
+      AC_DATA.ServerIp = AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_ip_address_default));
+      if (DEBUG) Log.d("PPRZ_info", "IP changed to: " + AppSettings.getString(SERVER_IP_ADDRESS, getString(R.string.pref_ip_address_default)));
       TcpSettingsChanged = true;
 
     }
 
     if (key.equals(SERVER_PORT_ADDRESS)) {
-      AC_DATA.ServerTcpPort = Integer.parseInt(AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_default_server_port)));
+      AC_DATA.ServerTcpPort = Integer.parseInt(AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_port_number_default)));
       TcpSettingsChanged = true;
-      //Log.d("PPRZ_info", "Server Port changed to: " + AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_default_server_port)));
+      if (DEBUG) Log.d("PPRZ_info", "Server Port changed to: " + AppSettings.getString(SERVER_PORT_ADDRESS, getString(R.string.pref_port_number_default)));
 
     }
 
     if (key.equals(LOCAL_PORT_ADDRESS)) {
 
-      AC_DATA.UdpListenPort = Integer.parseInt(AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_default_local_port)));
+      AC_DATA.UdpListenPort = Integer.parseInt(AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_local_port_number_default)));
       UdpSettingsChanged = true;
-      //Log.d("PPRZ_info", "Local Listen Port changed to: " + AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_default_local_port)));
+      if (DEBUG) Log.d("PPRZ_info", "Local Listen Port changed to: " + AppSettings.getString(LOCAL_PORT_ADDRESS, getString(R.string.pref_local_port_number_default)));
 
     }
 
     if (key.equals(MIN_AIRSPEED)) {
 
-      AC_DATA.AirSpeedMinSetting = Double.parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
-      //Log.d("PPRZ_info", "Local Listen Port changed to: " + AppSettings.getString(MIN_AIRSPEED, "10"));
+      AC_DATA.AirSpeedMinSetting = parseDouble(AppSettings.getString(MIN_AIRSPEED, "10"));
+      if (DEBUG) Log.d("PPRZ_info", "Local Listen Port changed to: " + AppSettings.getString(MIN_AIRSPEED, "10"));
     }
 
     if (key.equals(USE_GPS)) {
       mMap.setMyLocationEnabled(AppSettings.getBoolean(USE_GPS, true));
-      //Log.d("PPRZ_info", "GPS Usage changed to: " + AppSettings.getBoolean(USE_GPS, true));
+      if (DEBUG) Log.d("PPRZ_info", "GPS Usage changed to: " + AppSettings.getBoolean(USE_GPS, true));
     }
 
     if (key.equals(Control_Pass)) {
       AppPassword = AppSettings.getString(Control_Pass, "");
-      //Log.d("PPRZ_info", "App_password changed : " + AppSettings.getString(Control_Pass , ""));
+      if (DEBUG) Log.d("PPRZ_info", "App_password changed : " + AppSettings.getString(Control_Pass , ""));
     }
 
+    if (key.equals(BLOCK_C_TIMEOUT)) {
+      BL_CountDownTimerDuration = Integer.parseInt(AppSettings.getString(BLOCK_C_TIMEOUT, "3"))*1000;
+      setup_counter();
+      if (DEBUG) Log.d("PPRZ_info", "Clock change timeout changed : " + AppSettings.getString(BLOCK_C_TIMEOUT , ""));
+    }
+
+    if (key.equals(DISABLE_SCREEN_DIM)) {
+      DisableScreenDim = AppSettings.getBoolean(DISABLE_SCREEN_DIM, true);
+
+      if (DisableScreenDim) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+      else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+      if (DEBUG) Log.d("PPRZ_info", "Screen dim settings changed : " + DisableScreenDim);
+    }
 
   }
 
@@ -911,19 +1178,17 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   }
 
-  public void clear_ac_track(View Gorunus) {
+  public void clear_ac_track(View mView) {
 
     if (AC_DATA.SelAcInd < 0) {
-      center_aircraft();
       Toast.makeText(getApplicationContext(), "No AC data yet!", Toast.LENGTH_SHORT).show();
-
       return;
     }
 
-
     if (ShowOnlySelected) {
       AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Path.clear();
-    } else {
+    }
+    else {
       for (int AcInd = 0; AcInd <= AC_DATA.IndexEnd; AcInd++) {
         AC_DATA.AircraftData[AcInd].AC_Path.clear();
       }
@@ -932,20 +1197,32 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   }
 
-  //Function called when button_CenterAC (in left fragment) is pressed
-  public void center_ac(View Gorunus) {
-    if (AC_DATA.SelAcInd >= 0) {
-      center_aircraft();
-      mDrawerLayout.closeDrawers();
-      return;
+    public void confirm_bl_change(View mView) {
+        //Cancel timer & clear BlockList
+        BL_CountDown.cancel();
+        BL_CountDownTimerValue=BL_CountDownTimerDuration;
+        mBlListAdapter.ClickedInd=-1;
+        mBlListAdapter.notifyDataSetChanged();
+        //Notify app_server for changes
+        set_selected_block(JumpToBlock,false);
+
     }
-    Toast.makeText(getApplicationContext(), "No AC data yet!", Toast.LENGTH_SHORT).show();
-  }
+
+    public void cancel_bl_change(View mView) {
+        //Cancel timer & clear BlockList
+        BL_CountDown.cancel();
+        BL_CountDownTimerValue=BL_CountDownTimerDuration;
+        mBlListAdapter.ClickedInd=-1;
+        mBlListAdapter.notifyDataSetChanged();
+        Toast.makeText(getApplicationContext(), "Block change cancelled.", Toast.LENGTH_SHORT).show();
+
+
+    }
 
   //Function called when toggleButton_ConnectToServer (in left fragment) is pressed
-  public void connect_to_server(View Gorunus) {
+  public void connect_to_server(View mView) {
 
-    Toast.makeText(getApplicationContext(), "Trying to connectserver..", Toast.LENGTH_SHORT).show();
+    Toast.makeText(getApplicationContext(), "Trying to re-connect to server..", Toast.LENGTH_SHORT).show();
     //Force to reconnect
     TcpSettingsChanged = true;
     UdpSettingsChanged = true;
@@ -956,6 +1233,7 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   public void launch_ac(View mView) {
 
     if (AC_DATA.SelAcInd >= 0) {
+
       send_to_server("dl DL_SETTING " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Id + " " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_LaunchID + " 1.000000", true);
       //dl DL_SETTING 5 8 1.000000
     } else {
@@ -1022,6 +1300,12 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
   }
 
   public void change_visible_acdata(View mView) {
+
+    //Return if no AC data
+    if (AC_DATA.SelAcInd < 0) {
+      Toast.makeText(getApplicationContext(), "No AC data yet!", Toast.LENGTH_SHORT).show();
+      return;
+    }
 
     if (ChangeVisibleAcButon.isChecked()) {
       Toast.makeText(getApplicationContext(), "Showing only " + AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_Name + " markers", Toast.LENGTH_SHORT).show();
@@ -1106,6 +1390,72 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
   }
 
+  public void show_alt_dialog(View mView) {
+        //Will camera trace aircraft
+        //AcLocked = LockToAcSwitch.isChecked();
+        //mDrawerLayout.closeDrawers();
+      // set dialog components
+      if (AC_DATA.SelAcInd < 0) {
+          Toast.makeText(getApplicationContext(), "No AC data yet!", Toast.LENGTH_SHORT).show();
+          return;
+      }
+
+
+      fill_alt(AC_DATA.AircraftData[AC_DATA.SelAcInd].AC_DlAlt);
+      AltDialog.setTitle("Set Altitude");
+
+
+      AltDialog.show();
+
+  }
+
+  public void fill_alt(String AltStr){
+
+      //Clean AltStr
+      if (AltStr.contains(" ")) {
+          AltStr=AltStr.substring(0,AltStr.indexOf(" "));
+      }
+
+      if (AltStr.length() >=4 ) {
+          mNumberPickerThus.setValue(Integer.parseInt(AltStr.substring(0,1)));
+          mNumberPickerHuns.setValue(Integer.parseInt(AltStr.substring(1,2)));
+          mNumberPickerTens.setValue(Integer.parseInt(AltStr.substring(2,3)));
+          mNumberPickerOnes.setValue(Integer.parseInt(AltStr.substring(3,4)));
+          return;
+      }
+      else {
+          mNumberPickerThus.setValue(0);
+      }
+
+      if (AltStr.length() >=3 ) {
+          mNumberPickerHuns.setValue(Integer.parseInt(AltStr.substring(0,1)));
+          mNumberPickerTens.setValue(Integer.parseInt(AltStr.substring(1,2)));
+          mNumberPickerOnes.setValue(Integer.parseInt(AltStr.substring(2,3)));
+          return;
+      }
+      else {
+          mNumberPickerHuns.setValue(0);
+      }
+
+      if (AltStr.length() >=2 ) {
+          mNumberPickerTens.setValue(Integer.parseInt(AltStr.substring(0,1)));
+          mNumberPickerOnes.setValue(Integer.parseInt(AltStr.substring(1,2)));
+          return;
+      }
+      else {
+          mNumberPickerTens.setValue(0);
+      }
+
+      if (AltStr.length() >=1 ) {
+          mNumberPickerOnes.setValue(Integer.parseInt(AltStr.substring(0,1)));
+          return;
+      }
+      else {
+          mNumberPickerOnes.setValue(0);
+      }
+
+  }
+
   /**
    * background thread to read & write comm strings. Only changed UI items should be refreshed for smoother UI
    * Check telemetry class for whole UI change flags
@@ -1117,28 +1467,47 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       super.onPreExecute();
 
       isTaskRunning = true;
-      //Log.d("PPRZ_info", "ReadTelemetry() function started.");
+      if (DEBUG) Log.d("PPRZ_info", "ReadTelemetry() function started.");
     }
 
     @Override
     protected String doInBackground(String... strings) {
 
-      String TcpReceived = null;
+        mTCPthread =  new Thread(new ClientThread());
+        mTCPthread.start();
 
-      while (isTaskRunning) {
+        while (isTaskRunning) {
 
-        //1 check if any string waiting to be send to tcp
-        if (!(null == AC_DATA.SendToTcp)) {
-          AC_DATA.mTcpClient.sendMessage(AC_DATA.SendToTcp);
-          AC_DATA.SendToTcp = null;
-        }
+            //Check if settings changed
+            if (TcpSettingsChanged) {
+                AC_DATA.mTcpClient.stopClient();
+                try {
+                    Thread.sleep(200);
+                    //AC_DATA.mTcpClient.SERVERIP= AC_DATA.ServerIp;
+                    //AC_DATA.mTcpClient.SERVERPORT= AC_DATA.ServerTcpPort;
+                    mTCPthread =  new Thread(new ClientThread());
+                    mTCPthread.start();
+                    TcpSettingsChanged=false;
+                    if (DEBUG) Log.d("PPRZ_info", "TcpSettingsChanged applied");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
 
-        TcpReceived = AC_DATA.mTcpClient.readMessage();
+            if (UdpSettingsChanged) {
+                AC_DATA.setup_udp();
+                //AC_DATA.tcp_connection();
+                UdpSettingsChanged = false;
+                if (DEBUG) Log.d("PPRZ_info", "UdpSettingsChanged applied");
+            }
 
-        //2 check if any tcp string waiting to be parsed
-        if (!(null == TcpReceived)) {
-          AC_DATA.parse_tcp_string(TcpReceived);
-        }
+            // Log.e("PPRZ_info", "3");
+            //1 check if any string waiting to be send to tcp
+            if (!(null == AC_DATA.SendToTcp)) {
+                AC_DATA.mTcpClient.sendMessage(AC_DATA.SendToTcp);
+                AC_DATA.SendToTcp = null;
+
+            }
 
         //3 try to read & parse udp data
         AC_DATA.read_udp_data();
@@ -1149,15 +1518,12 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
           AC_DATA.ViewChanged = false;
         }
 
-        //Check if settings changed
-        if (TcpSettingsChanged || UdpSettingsChanged) {
-          publishProgress("ee");
-        }
+
 
 
       }
 
-      //Log.d("PPRZ_info", "doInBackground exiting");
+      if (DEBUG) Log.d("PPRZ_info", "Stopping AsyncTask ..");
       return null;
     }
 
@@ -1168,19 +1534,6 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
       try {
 
 
-        if (TcpSettingsChanged) {
-          AC_DATA.tcp_connection();
-          AC_DATA.mTcpClient.setup_tcp();
-          TcpSettingsChanged = false;
-          //Log.d("PPRZ_info", "TcpSettingsChanged applied");
-        }
-
-        if (UdpSettingsChanged) {
-          AC_DATA.setup_udp();
-          AC_DATA.tcp_connection();
-          UdpSettingsChanged = false;
-          //Log.d("PPRZ_info", "UdpSettingsChanged applied");
-        }
 
         if (AC_DATA.SelAcInd < 0) {
           //no selected aircrafts yet! Return.
@@ -1209,17 +1562,27 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
 
         if (AC_DATA.BlockChanged) {
           //Block changed for selected aircraft
-          //Log.d("PPRZ_info", "Block Changed for selected AC.");
-          mBlListAdapter.SelectedInd = AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock;
-          mBlListAdapter.notifyDataSetChanged();
+          if (DEBUG) Log.d("PPRZ_info", "Block Changed for selected AC.");
+
+          set_selected_block((AC_DATA.AircraftData[AC_DATA.SelAcInd].SelectedBlock-1),true);
           AC_DATA.BlockChanged = false;
+
         }
 
 
-        if (AC_DATA.NewAcAdded || AC_DATA.BatteryChanged) {
+        if (AC_DATA.NewAcAdded) {
           //new ac addedBattery value for an ac is changed
-          refresh_ac_list();
+
+          set_selected_ac(AC_DATA.SelAcInd,false);
+          AC_DATA.NewAcAdded = false;
         }
+
+          if (AC_DATA.BatteryChanged) {
+              //new ac addedBattery value for an ac is changed
+              refresh_ac_list();
+              mAcListAdapter.notifyDataSetChanged();
+              AC_DATA.BatteryChanged = false;
+          }
 
         //For a smooth gui we need refresh only changed gui controls
         refresh_markers();
@@ -1231,24 +1594,27 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
         }
 
         if (AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude_Changed) {
-          MapAlt.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude + "m");
-          AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude_Changed = false;
-          Drawable d = new BitmapDrawable(getResources(), AC_DATA.AcPfd);
-          Pfd.setBackground(d);
-          //Refresh_Pfd()
+          MapAlt.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude);
+
+            AC_DATA.AircraftData[AC_DATA.SelAcInd].Altitude_Changed = false;
+
+            Pfd.setImageBitmap(AC_DATA.AcPfd);
+
         }
 
-        if (AC_DATA.AirspeedChanged) {
+
+        if (AC_DATA.AircraftData[AC_DATA.SelAcInd].AirspeedEnabled && AC_DATA.AircraftData[AC_DATA.SelAcInd].AirspeedChanged) {
           //Airspeed Enabled
           TextViewAirspeed.setVisibility(View.VISIBLE);
           TextViewAirspeed.setText(AC_DATA.AircraftData[AC_DATA.SelAcInd].AirSpeed + " m/s");
         }
+
         //No error handling right now.
         Button_ConnectToServer.setText("Connected!");
         //}
 
       } catch (Exception ex) {
-        Log.d("Pprz_info", "Exception occured: " + ex.toString());
+          if (DEBUG) Log.d("Pprz_info", "Exception occured: " + ex.toString());
 
       }
 
@@ -1257,11 +1623,37 @@ public class MainActivity extends Activity implements SharedPreferences.OnShared
     @Override
     protected void onPostExecute(String s) {
       super.onPostExecute(s);
-      //Log.d("PPRZ_info", "onPostExecute");
+
     }
 
   }
 
+  class ClientThread implements Runnable {
+
+
+        @Override
+        public void run() {
+
+            if (DEBUG) Log.d("PPRZ_info", "ClientThread started");
+
+            AC_DATA.mTcpClient = new TCPClient(new TCPClient.OnMessageReceived() {
+                @Override
+                //here the messageReceived method is implemented
+                public void messageReceived(String message) {
+                    //this method calls the onProgressUpdate
+                    //publishProgress(message);
+                    //AC_DATA.parse_tcp_string(message);
+                    AC_DATA.parse_tcp_string(message);
+
+                }
+            });
+            AC_DATA.mTcpClient.SERVERIP = AC_DATA.ServerIp;
+            AC_DATA.mTcpClient.SERVERPORT= AC_DATA.ServerTcpPort;
+            AC_DATA.mTcpClient.run();
+
+        }
+
+    }
 
 
 
