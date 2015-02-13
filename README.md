@@ -11,7 +11,7 @@ Released version
 
 **Please download & compile latest app_server.c from paparazzi repository to be compatible for this version.**
 
-Currently, only the beta version 0.6 is released and can be downloaded from http://download.paparazziuav.org/android)
+PPRZonDroid is now available on Google Play
 
 
 How to open in android studio
