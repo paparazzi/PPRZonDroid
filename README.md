@@ -3,7 +3,7 @@ PPRZonDroid
 
 PPRZonDroid is an Android application for controlling [Paparazzi UAS] (http://paparazziuav.org).
 
-The user documentation can be found at http://http://wiki.paparazziuav.org/wiki/PPRZonDroid
+The user documentation can be found at https://wiki.paparazziuav.org/wiki/PPRZonDroid
 
 
 Released version
